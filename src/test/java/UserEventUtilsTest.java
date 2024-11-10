@@ -1,6 +1,5 @@
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.moloco.mcm.UserEventUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -29,16 +28,16 @@ class UserEventUtilsTest {
         }
 
         @Test
-        void shouldReturnEmptyArrayForEmptyObjects() throws Exception {
+        void shouldReturnArrayofEmptyObjectsAsIs() throws Exception {
             // Given
             JsonNode input = mapper.readTree("[{},{}]");
-            JsonNode expected = mapper.readTree("[]");
+            JsonNode expected = mapper.readTree("[{},{}]");
 
             // When
             JsonNode result = utils.filterArray(input);
 
             // Then
-            assertEquals(expected, result, "Should return empty array for array of empty objects");
+            assertEquals(expected, result, "Should return array of empty objects as is");
         }
     }
 
@@ -46,7 +45,7 @@ class UserEventUtilsTest {
     class NullFilterTests {
         @Test
         void shouldHandleNullInput() {
-            ObjectNode result = assertDoesNotThrow(() -> utils.filterNulls(null));
+            JsonNode result = assertDoesNotThrow(() -> utils.filterNulls(null));
             assertNull(result, "Should return null for null input");
         }
 
@@ -54,26 +53,90 @@ class UserEventUtilsTest {
         void shouldFilterNullValues() throws Exception {
             // Using simple array of Object[] instead of record
             Object[][] testCases = {
-                    new Object[]{
-                            "{\"key1\":\"value1\"}",
-                            "{\"key1\":\"value1\"}"
-                    },
-                    new Object[]{
-                            "{\"key1\":\"value1\",\"key2\":null}",
-                            "{\"key1\":\"value1\"}"
-                    },
-                    new Object[]{
-                            "{\"key1\":\"value1\",\"key2\":[\"v1\",null]}",
-                            "{\"key1\":\"value1\",\"key2\":[\"v1\"]}"
-                    },
-                    new Object[]{
-                            "{\"key1\":[{\"key11\":\"val11\",\"key12\":null}]}",
-                            "{\"key1\":[{\"key11\":\"val11\"}]}"
-                    },
-                    new Object[]{
-                            "{\"key1\":{\"key11\":\"value11\",\"key12\":{}}}",
-                            "{\"key1\":{\"key11\":\"value11\"}}"
-                    }
+                new Object[]{
+                    "{\"key\":null}",
+                    "{}"
+                },
+                new Object[]{
+                    "{\"key1\":\"value1\",\"key2\":null}",
+                    "{\"key1\":\"value1\"}"
+                },
+                new Object[]{
+                    "{\"key1\":\"value1\",\"key2\":[\"v1\",null]}",
+                    "{\"key1\":\"value1\",\"key2\":[\"v1\"]}"
+                },
+                new Object[]{
+                    "{\"key1\":[{\"key11\":\"val11\",\"key12\":null}]}",
+                    "{\"key1\":[{\"key11\":\"val11\"}]}"
+                },
+                new Object[]{
+                    "[123,null]",
+                    "[123]"
+                },
+                new Object[]{
+                    "[\"value\",null]",
+                    "[\"value\"]"
+                },
+                new Object[]{
+                    "\"string\"",
+                    "\"string\""
+                },
+                new Object[]{
+                    "123",
+                    "123"
+                },
+                new Object[]{
+                    "{}",
+                    "{}"
+                },
+                new Object[]{
+                    "[]",
+                    "[]"
+                },
+                new Object[]{
+                    "[{}]",
+                    "[{}]"
+                },
+                new Object[]{
+                    "[[]]",
+                    "[[]]"
+                },
+                new Object[]{
+                    "[[123,123]]",
+                    "[[123,123]]"
+                },
+                new Object[]{
+                    "{\"key\":[[]]}",
+                    "{\"key\":[[]]}"
+                },
+                new Object[]{
+                    "[[123,123]]",
+                    "[[123,123]]"
+                },
+                new Object[]{
+                    "{\"key\":\"null\"}",
+                    "{\"key\":\"null\"}",
+                },
+                new Object[]{
+                    "{\"key\":123}",
+                    "{\"key\":123}",
+                },
+                new Object[]{
+                    "{\"key\":\"value\"}",
+                    "{\"key\":\"value\"}",
+                },
+                new Object[]{
+                    "[\"value1\",\"null\"]",
+                    "[\"value1\",\"null\"]"
+                },
+                new Object[]{
+                    "{\"key1\":\"value1\",\"key2\":\"value2\"}",
+                    "{\"key1\":\"value1\",\"key2\":\"value2\"}"
+                },
+                new Object[]{
+                    "{\"key1\":{\"key11\":\"value11\",\"key12\":{}}}",
+                    "{\"key1\":{\"key11\":\"value11\",\"key12\":{}}}"
+                }
             };
 
             for (Object[] testCase : testCases) {

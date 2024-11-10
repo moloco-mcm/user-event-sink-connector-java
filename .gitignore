@@ -41,6 +41,11 @@ build/
 # --- OS-Specific Files ---
 .DS_Store
 
+
+# --- Local Files ---
+Main.java
+MainTest.java
+
 # --- Gradle Wrapper Files ---
 # Keep Gradle wrapper files
 !gradlew

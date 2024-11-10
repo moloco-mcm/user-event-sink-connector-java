@@ -100,7 +100,7 @@ public class UserEventSinkConnector {
 
         utils.validateData(jsonNode);
 
-        ObjectNode filteredJson = utils.filterNulls(jsonNode);
+        JsonNode filteredJson = utils.filterNulls(jsonNode);
         if (filteredJson == null) {
             throw new IllegalArgumentException("Failed to process JSON data: filtered result is null");
         }

@@ -24,11 +24,12 @@ java {
 dependencies {
     // Add your library dependencies here
     // Example:
-    // implementation("com.google.guava:guava:31.1-jre")
     implementation("org.apache.httpcomponents.client5:httpclient5:5.4")
+    // implementation("ch.qos.logback:logback-classic:1.5.12")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.18.1")
     implementation("com.fasterxml.jackson.core:jackson-core:2.18.1")
     implementation("com.fasterxml.jackson.core:jackson-annotations:2.18.1")
+    implementation("org.slf4j:slf4j-simple:2.1.0-alpha1")
 
     // Test dependencies
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.0")

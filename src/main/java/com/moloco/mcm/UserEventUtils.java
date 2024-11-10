@@ -190,12 +190,33 @@ public class UserEventUtils {
      * @param jsonNode The User Event data represented as a FasterXML JsonNode instance.
      * @return A new JSON object with null-value fields removed.
      */
-    public ObjectNode filterNulls(JsonNode jsonNode) {
+    public JsonNode filterNulls(JsonNode jsonNode) {
+        // Return early for null
         if (jsonNode == null) {
             return null;
         }
+        // Return as-is for non-container nodes        
+        if (!jsonNode.isContainerNode()) {
+            return jsonNode;
+        }
+
+        // Handle array input
+        if (jsonNode.isArray()) {
+            ArrayNode filteredArray = objectMapper.createArrayNode();
+            for (JsonNode element : jsonNode) {
+                if (element.isNull()) {
+                    continue;
+                }
+                JsonNode filtered = filterNulls(element);
+                if (filtered != null) {
+                    filteredArray.add(filtered);
+                }
+            }
+            return (JsonNode) filteredArray;
+        }
+
+        // Handle object input
         ObjectNode filteredNode = objectMapper.createObjectNode();
-        
         var fields = jsonNode.fields();
         while (fields.hasNext()) {
             var field = fields.next();
@@ -214,19 +235,18 @@ public class UserEventUtils {
             // Handle arrays next
             if (value.isArray()) {
                 JsonNode filtered = filterArray(value);
-                if (filtered.size() > 0) {
+                if (filtered != null) {
                     filteredNode.set(fieldName, filtered);
                 }
-                continue;
             }
             // Handle objects last
-            ObjectNode filtered = filterNulls(value);
-            if (filtered.size() > 0) {
+            JsonNode filtered = filterNulls(value);
+            if (filtered != null) {
                 filteredNode.set(fieldName, filtered);
             }
         }
 
-        return filteredNode;
+        return (JsonNode) filteredNode;
     }
 
     /**
@@ -241,18 +261,28 @@ public class UserEventUtils {
         }
         ArrayNode filteredArray = objectMapper.createArrayNode();
         for (JsonNode element : arrayNode) {
+            // Skip null values immediately
             if (element.isNull()) {
                 continue;
             }
-            if (element.isObject()) {
-                ObjectNode filteredObject = filterNulls(element);
-                if (filteredObject.isEmpty()) {
-                    continue;
-                }
-                filteredArray.add(filteredObject);
+            // Handle non-container values first (most common case)
+            if (!element.isContainerNode()) {
+                filteredArray.add(element);
                 continue;
             }
-            filteredArray.add(element);
+            // Handle arrays next
+            if (element.isArray()) {
+                JsonNode filtered = filterArray(element);
+                if (filtered != null) {
+                    filteredArray.add(filtered);
+                }
+                continue;
+            }
+            // Handle objects last
+            JsonNode filtered = filterNulls(element);
+            if (filtered != null) {
+                filteredArray.add(filtered);
+            }
         }
         return filteredArray;
     }

@@ -29,7 +29,7 @@ class UserEventSinkConnectorTest {
     @BeforeEach
     void setUp() {
         objectMapper = new ObjectMapper();
-        connector = createConnector();
+        connector = new UserEventSinkConnector(TEST_PLATFORM, TEST_URL, TEST_API_KEY);
     }
 
     @AfterEach
@@ -39,13 +39,44 @@ class UserEventSinkConnectorTest {
         }
     }
 
-    private UserEventSinkConnector createConnector() {
-        return new UserEventSinkConnector(TEST_PLATFORM, TEST_URL, TEST_API_KEY);
-    }
-
     @Nested
     @DisplayName("Null Input Tests")
     class NullInputTests {
+        @Test
+        @DisplayName("Should throw IllegalArgumentException when Platform ID is null")
+        void testUserEventSinkConnectorWithNullParameter1() {
+            IllegalArgumentException exception = assertThrows(
+                    IllegalArgumentException.class,
+                    () -> new UserEventSinkConnector(null, TEST_URL, TEST_API_KEY)
+            );
+
+            assertEquals("platformID cannot be null or empty", exception.getMessage());
+        }
+
+        @Test
+        @DisplayName("Should throw IllegalArgumentException when API Hostname is null")
+        void testUserEventSinkConnectorWithNullParameter2() {
+            IllegalArgumentException exception = assertThrows(
+                    IllegalArgumentException.class,
+                    () -> new UserEventSinkConnector(TEST_PLATFORM, null, TEST_API_KEY)
+            );
+
+            assertEquals("eventApiHostname cannot be null or empty", exception.getMessage());
+        }
+
+        @Test
+        @DisplayName("Should throw IllegalArgumentException when API Key is null")
+        void testUserEventSinkConnectorWithNullParameter3() {
+            IllegalArgumentException exception = assertThrows(
+                    IllegalArgumentException.class,
+                    () -> new UserEventSinkConnector(TEST_PLATFORM, TEST_URL, null)
+            );
+
+            assertEquals("eventApiKey cannot be null or empty", exception.getMessage());
+        }
+
+
+
         @Test
         @DisplayName("Should throw IllegalArgumentException when JsonNode is null")
         void testSendNullJsonNode() {
