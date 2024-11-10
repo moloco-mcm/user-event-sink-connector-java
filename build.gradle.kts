@@ -1,14 +1,16 @@
+import java.time.Duration
+
 plugins {
     `java-library`
     `maven-publish`
     signing
     jacoco
-    id("io.github.gradle-nexus.publish-plugin") version "1.3.0"
+    id("io.github.gradle-nexus.publish-plugin") version "2.0.0-rc-1" // Latest version
 }
 
 group = "com.moloco.mcm"
 version = "0.1.0"
-description = "Your library description"
+description = "Java library for sending user events to Moloco MCM's User Event API endpoint"
 
 repositories {
     mavenCentral()
@@ -19,23 +21,24 @@ java {
     withSourcesJar()
     sourceCompatibility = JavaVersion.VERSION_11
     targetCompatibility = JavaVersion.VERSION_11
+    // toolchain {
+    //     languageVersion.set(JavaLanguageVersion.of(11))
+    // }
 }
 
 dependencies {
-    // Add your library dependencies here
-    // Example:
+    // Core dependencies
     implementation("org.apache.httpcomponents.client5:httpclient5:5.4")
-    // implementation("ch.qos.logback:logback-classic:1.5.12")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.18.1")
     implementation("com.fasterxml.jackson.core:jackson-core:2.18.1")
     implementation("com.fasterxml.jackson.core:jackson-annotations:2.18.1")
     implementation("org.slf4j:slf4j-simple:2.1.0-alpha1")
 
     // Test dependencies
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.0")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.0")
-    testImplementation("org.junit.jupiter:junit-jupiter-params:5.10.0")
-    testImplementation("org.mockito:mockito-core:5.10.0")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.2")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.2")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:5.10.2")
+    testImplementation("org.mockito:mockito-core:5.11.0")
 }
 
 // Test Configuration
@@ -106,7 +109,6 @@ tasks.javadoc {
                 "https://javadoc.io/doc/com.fasterxml.jackson.core/jackson-annotations/2.18.1/index.html",
                 "https://javadoc.io/doc/com.fasterxml.jackson.core/jackson-databind/2.18.1/index.html",
                 "https://javadoc.io/doc/com.fasterxml.jackson.core/jackson-core/2.18.1/index.html"
-                // Add other dependency Javadoc URLs as needed
             )
         }
     }
@@ -117,11 +119,14 @@ publishing {
     publications {
         create<MavenPublication>("mavenJava") {
             from(components["java"])
+            
+            artifactId = "user-event-sink-connector"
 
             pom {
-                name.set(project.name)
+                name.set("MolocoMCM User Event Sink Connector")
                 description.set(project.description)
-                url.set("https://github.com/moloco-mcm/user-event-sink-connector-java") // Change this
+                url.set("https://github.com/moloco-mcm/user-event-sink-connector-java")
+                inceptionYear.set("2024")
 
                 licenses {
                     license {
@@ -132,16 +137,23 @@ publishing {
 
                 developers {
                     developer {
-                        id.set("jongnam") // Change this
-                        name.set("Jongnam Lee") // Change this
-                        email.set("jongnam@moloco.com") // Change this
+                        id.set("jongnam")
+                        name.set("Jongnam Lee")
+                        email.set("jongnam@moloco.com")
+                        organization.set("Moloco Commerce Media")
+                        organizationUrl.set("https://www.moloco.com/mcm")
                     }
                 }
 
                 scm {
-                    connection.set("scm:git:git://github.com/moloco-mcm/user-event-sink-connector-java.git") // Change this
-                    developerConnection.set("scm:git:ssh://github.com/moloco-mcm/user-event-sink-connector-java.git") // Change this
-                    url.set("https://github.com/moloco-mcm/user-event-sink-connector-java") // Change this
+                    connection.set("scm:git:git://github.com/moloco-mcm/user-event-sink-connector-java.git")
+                    developerConnection.set("scm:git:ssh://github.com/moloco-mcm/user-event-sink-connector-java.git")
+                    url.set("https://github.com/moloco-mcm/user-event-sink-connector-java")
+                }
+
+                issueManagement {
+                    system.set("GitHub")
+                    url.set("https://github.com/moloco-mcm/user-event-sink-connector-java/issues")
                 }
             }
         }
@@ -154,21 +166,26 @@ nexusPublishing {
         sonatype {
             nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
             snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
-            username.set(System.getenv("SONATYPE_USERNAME"))
-            password.set(System.getenv("SONATYPE_PASSWORD"))
+            username.set(System.getenv("SONATYPE_USERNAME") ?: findProperty("sonatypeUsername")?.toString())
+            password.set(System.getenv("SONATYPE_PASSWORD") ?: findProperty("sonatypePassword")?.toString())
         }
+    }
+    
+    transitionCheckOptions {
+        maxRetries.set(60)
+        delayBetween.set(Duration.ofSeconds(10))
     }
 }
 
 // Signing Configuration
 signing {
-    val signingKey = System.getenv("GPG_SIGNING_KEY")
-    val signingPassword = System.getenv("GPG_SIGNING_PASSWORD")
+    val signingKey = System.getenv("GPG_SIGNING_KEY") ?: findProperty("signingKey")?.toString()
+    val signingPassword = System.getenv("GPG_SIGNING_PASSWORD") ?: findProperty("signingPassword")?.toString()
     useInMemoryPgpKeys(signingKey, signingPassword)
     sign(publishing.publications["mavenJava"])
 }
 
-// Optional: Only sign when publishing to Maven Central
+// Only sign when publishing to Maven Central
 tasks.withType<Sign>().configureEach {
     onlyIf { !version.toString().endsWith("SNAPSHOT") }
 }
