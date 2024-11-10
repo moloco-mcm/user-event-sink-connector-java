@@ -72,6 +72,12 @@ class UserEventUtilsTest {
                     "{\"a\":{\"b\":{\"c\":null}}}",
                     "{\"a\":{\"b\":{}}}"
                 },
+
+                // Nexted arrays with nulls
+                new Object[]{
+                    "{\"arr\":[1,null,[2,null,3]]}",
+                    "{\"arr\":[1,[2,3]]}"
+                },
                 
                 // Arrays with nulls
                 new Object[]{

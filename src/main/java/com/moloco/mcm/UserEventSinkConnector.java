@@ -38,7 +38,13 @@ public class UserEventSinkConnector {
      * @param maxConnectionsPerRoute the maximum connections per route. Defaults to 10
      * @throws IllegalArgumentException if any of the required parameters are null or empty
      */
-    public UserEventSinkConnector(String platformID, String eventApiHostname, String eventApiKey, int maxTotalConnections, int maxConnectionsPerRoute) throws IllegalArgumentException, IOException {
+    public UserEventSinkConnector(
+        String platformID, 
+        String eventApiHostname, 
+        String eventApiKey, 
+        int maxTotalConnections, 
+        int maxConnectionsPerRoute) 
+        throws IllegalArgumentException {
         // Validate constructor parameters
         this.platformID = validateParameter("platformID", platformID);
         this.eventApiHostname = validateParameter("eventApiHostname", eventApiHostname);

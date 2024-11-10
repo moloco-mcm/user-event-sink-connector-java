@@ -31,7 +31,7 @@ class UserEventSinkConnectorTest {
         objectMapper = new ObjectMapper();
         try {
             connector = new UserEventSinkConnector(TEST_PLATFORM, TEST_URL, TEST_API_KEY, 100, 10);
-        } catch (IOException e) {
+        } catch (IllegalArgumentException e) {
             
         }
     }
