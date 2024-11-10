@@ -27,7 +27,7 @@ public class UserEventUtils {
          * @param t the input argument of type T
          * @throws Exception if an error occurs during the operation
          */
-        void accept(T t) throws Exception;
+        void accept(T t) throws IllegalArgumentException;
     }
 
     private final Map<String, ThrowingConsumer<JsonNode>> testActions = new HashMap<>();
@@ -56,21 +56,21 @@ public class UserEventUtils {
      * and release updated library versions.
      *
      * @param jsonNode The User Event data represented as a FasterXML JsonNode instance.
-     * @throws Exception If the User Event data fails validation.
+     * @throws IllegalArgumentException If the User Event data fails validation.
      */
-    public void validateData(JsonNode jsonNode) throws Exception {
+    public void validateData(JsonNode jsonNode) throws IllegalArgumentException {
         // Test the common fields
         this.testCommon(jsonNode);
 
         // Get the action associated with the typeCode or provide a default if not found
         JsonNode eventTypeNode = jsonNode.get("event_type");
         if (null == eventTypeNode) {
-            throw new Exception("The event_type field is missing");
+            throw new IllegalArgumentException("The event_type field is missing");
         }
         String eventType = eventTypeNode.asText();
         ThrowingConsumer<JsonNode> action = testActions.getOrDefault(
                 eventType,
-                data -> { throw new Exception("Unknown event type: " + eventType); }
+                data -> { throw new IllegalArgumentException("Unknown event type: " + eventType); }
         );
         // Execute the action with the input
         action.accept(jsonNode);
@@ -80,25 +80,25 @@ public class UserEventUtils {
      * Validates common field values, such as the timestamp.
      *
      * @param jsonNode The User Event data represented as a FasterXML JsonNode instance.
-     * @throws Exception If the User Event data fails validation.
+     * @throws IllegalArgumentException If the User Event data fails validation.
      */
-    public void testCommon(JsonNode jsonNode) throws Exception {
+    public void testCommon(JsonNode jsonNode) throws IllegalArgumentException {
         if (jsonNode == null) {
-            throw new Exception("jsonNode parameter cannot be null");
+            throw new IllegalArgumentException("jsonNode parameter cannot be null");
         }
         JsonNode node = jsonNode.get("timestamp");
         if (node == null) {
-            throw new Exception("The timestamp field must be present: " + jsonNode);
+            throw new IllegalArgumentException("The timestamp field must be present: " + jsonNode);
         }
 
         String timestamp = node.asText();
         if (timestamp.isEmpty()) {
-            throw new Exception("The timestamp field cannot be null: " + jsonNode);
+            throw new IllegalArgumentException("The timestamp field cannot be null: " + jsonNode);
         }
         try {
             Long.parseLong(timestamp);
         } catch (NumberFormatException e) {
-            throw new Exception("The timestamp field must be a Unix timestamp in milliseconds (not seconds) indicating when the event occurred (e.g., 1617870506121): " + jsonNode);
+            throw new IllegalArgumentException("The timestamp field must be a Unix timestamp in milliseconds (not seconds) indicating when the event occurred (e.g., 1617870506121): " + jsonNode);
         }
     }
 
@@ -106,9 +106,9 @@ public class UserEventUtils {
      * Validates HOME, and LAND User Event data.
      *
      * @param jsonNode The User Event data represented as a FasterXML JsonNode instance.
-     * @throws Exception If the User Event data fails validation.
+     * @throws IllegalArgumentException If the User Event data fails validation.
      */
-    public void testHome(JsonNode jsonNode) throws Exception {
+    public void testHome(JsonNode jsonNode) throws IllegalArgumentException {
         // To add validation logics
     }
 
@@ -116,17 +116,17 @@ public class UserEventUtils {
      * Validates ITEM_PAGE_VIEW, ADD_TO_CART, and ADD_TO_WISHLIST User Event data.
      *
      * @param jsonNode The User Event data represented as a FasterXML JsonNode instance.
-     * @throws Exception If the User Event data fails validation.
+     * @throws IllegalArgumentException If the User Event data fails validation.
      */
-    public void testPDP(JsonNode jsonNode) throws Exception {
+    public void testPDP(JsonNode jsonNode) throws IllegalArgumentException {
         JsonNode itemsNode = jsonNode.get("items");
         if (itemsNode == null || !itemsNode.isArray()) {
-            throw new Exception("The items field must be a valid array for the following events: ITEM_PAGE_VIEW, ADD_TO_CART, and ADD_TO_WISHLIST. " + jsonNode);
+            throw new IllegalArgumentException("The items field must be a valid array for the following events: ITEM_PAGE_VIEW, ADD_TO_CART, and ADD_TO_WISHLIST. " + jsonNode);
         }
 
         ArrayNode items = (ArrayNode) itemsNode;
         if (items.isEmpty()) {
-            throw new Exception("The items field must not be empty for the following events: ITEM_PAGE_VIEW, ADD_TO_CART, and ADD_TO_WISHLIST. " + jsonNode);
+            throw new IllegalArgumentException("The items field must not be empty for the following events: ITEM_PAGE_VIEW, ADD_TO_CART, and ADD_TO_WISHLIST. " + jsonNode);
         }
     }
 
@@ -134,17 +134,17 @@ public class UserEventUtils {
      * Validates SEARCH User Event data.
      *
      * @param jsonNode The User Event data represented as a FasterXML JsonNode instance.
-     * @throws Exception If the User Event data fails validation.
+     * @throws IllegalArgumentException If the User Event data fails validation.
      */
-    public void testSearch(JsonNode jsonNode) throws Exception {
+    public void testSearch(JsonNode jsonNode) throws IllegalArgumentException {
         JsonNode node = jsonNode.get("search_query");
         if (node == null || node.isNull()) {
-            throw new Exception("The search_query field must be present in the SEARCH user event. " + jsonNode);
+            throw new IllegalArgumentException("The search_query field must be present in the SEARCH user event. " + jsonNode);
         }
 
         String searchQuery = node.asText();
         if (searchQuery.isEmpty()) {
-            throw new Exception("The search_query field cannot be null or empty in the SEARCH user event. " + jsonNode);
+            throw new IllegalArgumentException("The search_query field cannot be null or empty in the SEARCH user event. " + jsonNode);
         }
     }
 
@@ -152,17 +152,17 @@ public class UserEventUtils {
      * Validates PAGE_VIEW User Event data.
      *
      * @param jsonNode The User Event data represented as a FasterXML JsonNode instance.
-     * @throws Exception If the User Event data fails validation.
+     * @throws IllegalArgumentException If the User Event data fails validation.
      */
-    public void testPageView(JsonNode jsonNode) throws Exception {
+    public void testPageView(JsonNode jsonNode) throws IllegalArgumentException {
         JsonNode node = jsonNode.get("page_id");
         if (node == null || node.isNull()) {
-            throw new Exception("The page_id field must be present in the PAGE_VIEW user event. " + jsonNode);
+            throw new IllegalArgumentException("The page_id field must be present in the PAGE_VIEW user event. " + jsonNode);
         }
 
         String pageID = node.asText();
         if (pageID.isEmpty()) {
-            throw new Exception("The page_id field cannot be null or empty in the PAGE_VIEW user event. " + jsonNode);
+            throw new IllegalArgumentException("The page_id field cannot be null or empty in the PAGE_VIEW user event. " + jsonNode);
         }
     }
 
@@ -170,17 +170,17 @@ public class UserEventUtils {
      * Validates PURCHASE User Event data.
      *
      * @param jsonNode The User Event data represented as a FasterXML JsonNode instance.
-     * @throws Exception If the User Event data fails validation.
+     * @throws IllegalArgumentException If the User Event data fails validation.
      */
-    public void testPurchase(JsonNode jsonNode) throws Exception {
+    public void testPurchase(JsonNode jsonNode) throws IllegalArgumentException {
         JsonNode itemsNode = jsonNode.get("items");
         if (itemsNode == null || !itemsNode.isArray()) {
-            throw new Exception("The items field must be a valid array for the PURCHASE event. " + jsonNode);
+            throw new IllegalArgumentException("The items field must be a valid array for the PURCHASE event. " + jsonNode);
         }
 
         ArrayNode items = (ArrayNode) itemsNode;
         if (items.isEmpty()) {
-            throw new Exception("The items field must not be empty for the PURCHASE event. " + jsonNode);
+            throw new IllegalArgumentException("The items field must not be empty for the PURCHASE event. " + jsonNode);
         }
     }
 

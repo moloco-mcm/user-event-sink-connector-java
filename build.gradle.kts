@@ -87,6 +87,7 @@ tasks.jacocoTestCoverageVerification {
 
 // Javadoc Configuration
 tasks.javadoc {
+    exclude("com/moloco/mcm/Main.java")
     options {
         encoding = "UTF-8"
         (this as StandardJavadocDocletOptions).apply {
@@ -170,4 +171,8 @@ signing {
 // Optional: Only sign when publishing to Maven Central
 tasks.withType<Sign>().configureEach {
     onlyIf { !version.toString().endsWith("SNAPSHOT") }
+}
+
+tasks.jar {
+    exclude("com/moloco/mcm/Main.class")
 }

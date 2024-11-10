@@ -9,7 +9,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-
+import java.io.IOException;
 
 @DisplayName("UserEventSinkConnector Tests")
 class UserEventSinkConnectorTest {
@@ -29,7 +29,11 @@ class UserEventSinkConnectorTest {
     @BeforeEach
     void setUp() {
         objectMapper = new ObjectMapper();
-        connector = new UserEventSinkConnector(TEST_PLATFORM, TEST_URL, TEST_API_KEY, 100, 10);
+        try {
+            connector = new UserEventSinkConnector(TEST_PLATFORM, TEST_URL, TEST_API_KEY, 100, 10);
+        } catch (IOException e) {
+            
+        }
     }
 
     @AfterEach

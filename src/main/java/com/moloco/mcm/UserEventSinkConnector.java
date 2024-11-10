@@ -38,7 +38,7 @@ public class UserEventSinkConnector {
      * @param maxConnectionsPerRoute the maximum connections per route. Defaults to 10
      * @throws IllegalArgumentException if any of the required parameters are null or empty
      */
-    public UserEventSinkConnector(String platformID, String eventApiHostname, String eventApiKey, int maxTotalConnections, int maxConnectionsPerRoute) throws IllegalArgumentException {
+    public UserEventSinkConnector(String platformID, String eventApiHostname, String eventApiKey, int maxTotalConnections, int maxConnectionsPerRoute) throws IllegalArgumentException, IOException {
         // Validate constructor parameters
         this.platformID = validateParameter("platformID", platformID);
         this.eventApiHostname = validateParameter("eventApiHostname", eventApiHostname);
@@ -76,9 +76,9 @@ public class UserEventSinkConnector {
      *
      * @param jsonString a string representing the event data in JSON format
      * @throws IllegalArgumentException if the input string is null or empty
-     * @throws Exception if an error occurs during parsing the input string or sending the data
+     * @throws IOException if an error occurs during sending or receiving the response
      */
-    public void send(String jsonString) throws Exception {
+    public void send(String jsonString) throws IllegalArgumentException, IOException {
         if (jsonString == null || jsonString.trim().isEmpty()) {
             throw new IllegalArgumentException("The jsonString cannot be null or empty");
         }
@@ -92,9 +92,9 @@ public class UserEventSinkConnector {
      *
      * @param jsonNode the event data represented as a FasterXML JSON Node
      * @throws IllegalArgumentException if the input node is null
-     * @throws Exception if an error occurs during sending
+     * @throws IOException if an error occurs during sending or receiving the response  
      */
-    public void send(JsonNode jsonNode) throws Exception {
+    public void send(JsonNode jsonNode) throws IllegalArgumentException, IOException {
         if (jsonNode == null) {
             throw new IllegalArgumentException("The jsonNode cannot be null");
         }
@@ -127,7 +127,7 @@ public class UserEventSinkConnector {
      *
      * @param response The HTTP response message
      * @return Content from a successful response
-     * @throws IOException If there's an issue with network communication
+     * @throws IOException If there's an issue with network communication or the HTTP response
      */
     private String handleResponse(ClassicHttpResponse response) throws IOException {
         Objects.requireNonNull(response, "HTTP response cannot be null");
@@ -143,7 +143,7 @@ public class UserEventSinkConnector {
             throw new IOException("Failed to read response body: " + e.getMessage(), e);
         }
 
-        if (statusCode >= 200 && statusCode < 300) {
+        if (200 <= statusCode && statusCode < 300) {
             return responseBody;
         } else {
             throw new IOException(String.format("Request failed: status code: %s, reason phrase: %s", statusCode, responseBody));

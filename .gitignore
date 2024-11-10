@@ -43,8 +43,7 @@ build/
 
 
 # --- Local Files ---
-Main.java
-MainTest.java
+.env
 
 # --- Gradle Wrapper Files ---
 # Keep Gradle wrapper files
