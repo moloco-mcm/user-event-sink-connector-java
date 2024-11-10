@@ -2,7 +2,6 @@ package com.moloco.mcm;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
@@ -35,9 +34,11 @@ public class UserEventSinkConnector {
      * @param platformID the platform ID (in capital letters and underscore character)
      * @param eventApiHostname the hostname of the user event API
      * @param eventApiKey the User Event API key for authentication
+     * @param maxTotalConnections the maximum total number of connections. Defaults to 100
+     * @param maxConnectionsPerRoute the maximum connections per route. Defaults to 10
      * @throws IllegalArgumentException if any of the required parameters are null or empty
      */
-    public UserEventSinkConnector(String platformID, String eventApiHostname, String eventApiKey) throws IllegalArgumentException {
+    public UserEventSinkConnector(String platformID, String eventApiHostname, String eventApiKey, int maxTotalConnections, int maxConnectionsPerRoute) throws IllegalArgumentException {
         // Validate constructor parameters
         this.platformID = validateParameter("platformID", platformID);
         this.eventApiHostname = validateParameter("eventApiHostname", eventApiHostname);
@@ -47,8 +48,8 @@ public class UserEventSinkConnector {
         this.objectMapper = new ObjectMapper();
 
         PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
-        connectionManager.setMaxTotal(100);
-        connectionManager.setDefaultMaxPerRoute(10);
+        connectionManager.setMaxTotal(maxTotalConnections <= 0 ? 100 : maxTotalConnections);
+        connectionManager.setDefaultMaxPerRoute(maxConnectionsPerRoute <= 0 ? 10 : maxConnectionsPerRoute);
 
         this.httpClient = HttpClients.custom()
                 .setConnectionManager(connectionManager)
