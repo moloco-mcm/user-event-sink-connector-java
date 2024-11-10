@@ -1,0 +1,49 @@
+# --- Compiled Files ---
+*.class
+
+# --- Log Files ---
+*.log
+hs_err_pid*
+replay_pid*
+
+# --- IDE / Editor Files ---
+# IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Eclipse
+*.classpath
+*.project
+
+# --- Project Build Directories ---
+/out/
+target/
+build/
+.gradle/
+
+# --- BlueJ Files ---
+*.ctxt
+
+# --- Mobile Tools for Java (J2ME) ---
+.mtj.tmp/
+
+# --- Package Files ---
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# --- OS-Specific Files ---
+.DS_Store
+
+# --- Gradle Wrapper Files ---
+# Keep Gradle wrapper files
+!gradlew
+!gradlew.bat
+!gradle/wrapper/gradle-wrapper.properties
+!gradle/wrapper/gradle-wrapper.jar

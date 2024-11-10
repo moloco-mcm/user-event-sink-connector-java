@@ -1,0 +1,259 @@
+package com.moloco.mcm;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * A Utility class of the library.
+ */
+public class UserEventUtils {
+
+    /**
+     * Functional interface for a consumer that can throw an exception.
+     * This interface allows for lambda expressions or method references
+     * that accept a parameter and may throw a checked exception.
+     *
+     * @param <T> The type of the input to the operation
+     */
+    @FunctionalInterface
+    public interface ThrowingConsumer<T> {
+        /**
+         * Performs this operation on the given argument, allowing for checked exceptions.
+         *
+         * @param t the input argument of type T
+         * @throws Exception if an error occurs during the operation
+         */
+        void accept(T t) throws Exception;
+    }
+
+    private final Map<String, ThrowingConsumer<JsonNode>> testActions = new HashMap<>();
+    private final ObjectMapper objectMapper = new ObjectMapper(); // Jackson ObjectMapper instance
+
+    /**
+     * Initializes the User Event data validation methods.
+     * It stores the map with type codes and the corresponding validation methods for faster data processing.
+     */
+    public UserEventUtils() {
+        // Initialize the map with type codes and their corresponding methods
+        testActions.put("HOME", this::testHome);
+        testActions.put("LAND", this::testHome);
+        testActions.put("ITEM_PAGE_VIEW", this::testPDP);
+        testActions.put("ADD_TO_CART", this::testPDP);
+        testActions.put("ADD_TO_WISHLIST", this::testPDP);
+        testActions.put("SEARCH", this::testSearch);
+        testActions.put("PAGE_VIEW", this::testPageView);
+        testActions.put("PURCHASE", this::testPurchase);
+    }
+
+    /**
+     * Validates the User Event data and raises an Exception if invalid content is detected.
+     * This validation is not exhaustive; it aims to catch common mistakes early.
+     * The Moloco MCM team continually identifies frequent errors to improve validation rules
+     * and release updated library versions.
+     *
+     * @param jsonNode The User Event data represented as a FasterXML JsonNode instance.
+     * @throws Exception If the User Event data fails validation.
+     */
+    public void validateData(JsonNode jsonNode) throws Exception {
+        // Test the common fields
+        this.testCommon(jsonNode);
+
+        // Get the action associated with the typeCode or provide a default if not found
+        JsonNode eventTypeNode = jsonNode.get("event_type");
+        if (null == eventTypeNode) {
+            throw new Exception("The event_type field is missing");
+        }
+        String eventType = eventTypeNode.asText();
+        ThrowingConsumer<JsonNode> action = testActions.getOrDefault(
+                eventType,
+                data -> { throw new Exception("Unknown event type: " + eventType); }
+        );
+        // Execute the action with the input
+        action.accept(jsonNode);
+    }
+
+    /**
+     * Validates common field values, such as the timestamp.
+     *
+     * @param jsonNode The User Event data represented as a FasterXML JsonNode instance.
+     * @throws Exception If the User Event data fails validation.
+     */
+    public void testCommon(JsonNode jsonNode) throws Exception {
+        if (jsonNode == null) {
+            throw new Exception("jsonNode parameter cannot be null");
+        }
+        JsonNode node = jsonNode.get("timestamp");
+        if (node == null) {
+            throw new Exception("The timestamp field must be present: " + jsonNode);
+        }
+
+        String timestamp = node.asText();
+        if (timestamp.isEmpty()) {
+            throw new Exception("The timestamp field cannot be null: " + jsonNode);
+        }
+        try {
+            Long.parseLong(timestamp);
+        } catch (NumberFormatException e) {
+            throw new Exception("The timestamp field must be a Unix timestamp in milliseconds (not seconds) indicating when the event occurred (e.g., 1617870506121): " + jsonNode);
+        }
+    }
+
+    /**
+     * Validates HOME, and LAND User Event data.
+     *
+     * @param jsonNode The User Event data represented as a FasterXML JsonNode instance.
+     * @throws Exception If the User Event data fails validation.
+     */
+    public void testHome(JsonNode jsonNode) throws Exception {
+        // To add validation logics
+    }
+
+    /**
+     * Validates ITEM_PAGE_VIEW, ADD_TO_CART, and ADD_TO_WISHLIST User Event data.
+     *
+     * @param jsonNode The User Event data represented as a FasterXML JsonNode instance.
+     * @throws Exception If the User Event data fails validation.
+     */
+    public void testPDP(JsonNode jsonNode) throws Exception {
+        JsonNode itemsNode = jsonNode.get("items");
+        if (itemsNode == null || !itemsNode.isArray()) {
+            throw new Exception("The items field must be a valid array for the following events: ITEM_PAGE_VIEW, ADD_TO_CART, and ADD_TO_WISHLIST. " + jsonNode);
+        }
+
+        ArrayNode items = (ArrayNode) itemsNode;
+        if (items.isEmpty()) {
+            throw new Exception("The items field must not be empty for the following events: ITEM_PAGE_VIEW, ADD_TO_CART, and ADD_TO_WISHLIST. " + jsonNode);
+        }
+    }
+
+    /**
+     * Validates SEARCH User Event data.
+     *
+     * @param jsonNode The User Event data represented as a FasterXML JsonNode instance.
+     * @throws Exception If the User Event data fails validation.
+     */
+    public void testSearch(JsonNode jsonNode) throws Exception {
+        JsonNode node = jsonNode.get("search_query");
+        if (node == null || node.isNull()) {
+            throw new Exception("The search_query field must be present in the SEARCH user event. " + jsonNode);
+        }
+
+        String searchQuery = node.asText();
+        if (searchQuery.isEmpty()) {
+            throw new Exception("The search_query field cannot be null or empty in the SEARCH user event. " + jsonNode);
+        }
+    }
+
+    /**
+     * Validates PAGE_VIEW User Event data.
+     *
+     * @param jsonNode The User Event data represented as a FasterXML JsonNode instance.
+     * @throws Exception If the User Event data fails validation.
+     */
+    public void testPageView(JsonNode jsonNode) throws Exception {
+        JsonNode node = jsonNode.get("page_id");
+        if (node == null || node.isNull()) {
+            throw new Exception("The page_id field must be present in the PAGE_VIEW user event. " + jsonNode);
+        }
+
+        String pageID = node.asText();
+        if (pageID.isEmpty()) {
+            throw new Exception("The page_id field cannot be null or empty in the PAGE_VIEW user event. " + jsonNode);
+        }
+    }
+
+    /**
+     * Validates PURCHASE User Event data.
+     *
+     * @param jsonNode The User Event data represented as a FasterXML JsonNode instance.
+     * @throws Exception If the User Event data fails validation.
+     */
+    public void testPurchase(JsonNode jsonNode) throws Exception {
+        JsonNode itemsNode = jsonNode.get("items");
+        if (itemsNode == null || !itemsNode.isArray()) {
+            throw new Exception("The items field must be a valid array for the PURCHASE event. " + jsonNode);
+        }
+
+        ArrayNode items = (ArrayNode) itemsNode;
+        if (items.isEmpty()) {
+            throw new Exception("The items field must not be empty for the PURCHASE event. " + jsonNode);
+        }
+    }
+
+    /**
+     * Removes JSON nodes with null values from the JSON object.
+     *
+     * @param jsonNode The User Event data represented as a FasterXML JsonNode instance.
+     * @return A new JSON object with null-value fields removed.
+     */
+    public ObjectNode filterNulls(JsonNode jsonNode) {
+        if (jsonNode == null) {
+            return null;
+        }
+        ObjectNode filteredNode = objectMapper.createObjectNode();
+        
+        var fields = jsonNode.fields();
+        while (fields.hasNext()) {
+            var field = fields.next();
+            JsonNode value = field.getValue();
+            String fieldName = field.getKey();
+            
+            // Skip null values immediately
+            if (value.isNull()) {
+                continue;
+            }
+            // Handle non-container values first (most common case)
+            if (!value.isContainerNode()) {
+                filteredNode.set(fieldName, value);
+                continue;
+            }
+            // Handle arrays next
+            if (value.isArray()) {
+                JsonNode filtered = filterArray(value);
+                if (filtered.size() > 0) {
+                    filteredNode.set(fieldName, filtered);
+                }
+                continue;
+            }
+            // Handle objects last
+            ObjectNode filtered = filterNulls(value);
+            if (filtered.size() > 0) {
+                filteredNode.set(fieldName, filtered);
+            }
+        }
+
+        return filteredNode;
+    }
+
+    /**
+     * Removes null-value elements from a JSON array.
+     *
+     * @param arrayNode The JSON array represented as a FasterXML JsonNode instance.
+     * @return A new JSON array with null-value elements removed.
+     */
+    public JsonNode filterArray(JsonNode arrayNode) {
+        if (arrayNode == null) {
+            return null;
+        }
+        ArrayNode filteredArray = objectMapper.createArrayNode();
+        for (JsonNode element : arrayNode) {
+            if (element.isNull()) {
+                continue;
+            }
+            if (element.isObject()) {
+                ObjectNode filteredObject = filterNulls(element);
+                if (filteredObject.isEmpty()) {
+                    continue;
+                }
+                filteredArray.add(filteredObject);
+                continue;
+            }
+            filteredArray.add(element);
+        }
+        return filteredArray;
+    }
+}
