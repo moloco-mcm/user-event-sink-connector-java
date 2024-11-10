@@ -5,7 +5,7 @@ plugins {
     `maven-publish`
     signing
     jacoco
-    id("io.github.gradle-nexus.publish-plugin") version "2.0.0-rc-1" // Latest version
+    id("io.github.gradle-nexus.publish-plugin") version "1.3.0"
 }
 
 group = "com.moloco.mcm"
