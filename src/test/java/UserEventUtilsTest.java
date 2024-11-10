@@ -53,6 +53,7 @@ class UserEventUtilsTest {
         void shouldFilterNullValues() throws Exception {
             // Using simple array of Object[] instead of record
             Object[][] testCases = {
+                // Basic null value filtering
                 new Object[]{
                     "{\"key\":null}",
                     "{}"
@@ -61,22 +62,38 @@ class UserEventUtilsTest {
                     "{\"key1\":\"value1\",\"key2\":null}",
                     "{\"key1\":\"value1\"}"
                 },
+                
+                // Nested objects with nulls
                 new Object[]{
-                    "{\"key1\":\"value1\",\"key2\":[\"v1\",null]}",
-                    "{\"key1\":\"value1\",\"key2\":[\"v1\"]}"
+                    "{\"obj\":{\"a\":1,\"b\":null,\"c\":{\"d\":null}}}",
+                    "{\"obj\":{\"a\":1,\"c\":{}}}"
                 },
                 new Object[]{
-                    "{\"key1\":[{\"key11\":\"val11\",\"key12\":null}]}",
-                    "{\"key1\":[{\"key11\":\"val11\"}]}"
+                    "{\"a\":{\"b\":{\"c\":null}}}",
+                    "{\"a\":{\"b\":{}}}"
+                },
+                
+                // Arrays with nulls
+                new Object[]{
+                    "{\"arr\":[1,null,2,null,3]}",
+                    "{\"arr\":[1,2,3]}"
                 },
                 new Object[]{
-                    "[123,null]",
-                    "[123]"
+                    "[null,{\"a\":1},null,{\"b\":null}]",
+                    "[{\"a\":1},{}]"
+                },
+                
+                // Mixed nested structures
+                new Object[]{
+                    "{\"obj\":{\"arr\":[1,null,{\"a\":null}]}}",
+                    "{\"obj\":{\"arr\":[1,{}]}}"
                 },
                 new Object[]{
-                    "[\"value\",null]",
-                    "[\"value\"]"
+                    "[{\"a\":1,\"b\":null},[1,null],{\"c\":null}]",
+                    "[{\"a\":1},[1],{}]"
                 },
+                
+                // Edge cases
                 new Object[]{
                     "\"string\"",
                     "\"string\""
@@ -86,56 +103,64 @@ class UserEventUtilsTest {
                     "123"
                 },
                 new Object[]{
-                    "{}",
-                    "{}"
+                    "true",
+                    "true"
+                },
+                new Object[]{
+                    "false",
+                    "false"
                 },
                 new Object[]{
                     "[]",
                     "[]"
                 },
                 new Object[]{
-                    "[{}]",
-                    "[{}]"
+                    "{}",
+                    "{}"
+                },
+                
+                // Special values
+                new Object[]{
+                    "{\"nullString\":\"null\"}",
+                    "{\"nullString\":\"null\"}"
                 },
                 new Object[]{
-                    "[[]]",
-                    "[[]]"
+                    "{\"empty\":\"\"}",
+                    "{\"empty\":\"\"}"
+                },
+                
+                // Complex nested structures
+                new Object[]{
+                    "{\"a\":[{\"b\":null,\"c\":[1,null,{\"d\":null}]}]}",
+                    "{\"a\":[{\"c\":[1,{}]}]}"
                 },
                 new Object[]{
-                    "[[123,123]]",
-                    "[[123,123]]"
+                    "{\"deep\":{\"nested\":{\"array\":[1,null,{\"obj\":null}],\"value\":null}}}",
+                    "{\"deep\":{\"nested\":{\"array\":[1,{}]}}}"
                 },
+                
+                // Multiple nested arrays
                 new Object[]{
-                    "{\"key\":[[]]}",
-                    "{\"key\":[[]]}"
+                    "[[null,[1,null]],[null,2],null]",
+                    "[[[1]],[2]]"
                 },
+                
+                // Mixed types
                 new Object[]{
-                    "[[123,123]]",
-                    "[[123,123]]"
+                    "{\"str\":\"value\",\"num\":123,\"bool\":true,\"null\":null,\"arr\":[1,null],\"obj\":{\"a\":null}}",
+                    "{\"str\":\"value\",\"num\":123,\"bool\":true,\"arr\":[1],\"obj\":{}}"
                 },
+                
+                // Empty structures
                 new Object[]{
-                    "{\"key\":\"null\"}",
-                    "{\"key\":\"null\"}",
+                    "{\"emptyArr\":[],\"emptyObj\":{},\"null\":null}",
+                    "{\"emptyArr\":[],\"emptyObj\":{}}"
                 },
+                
+                // Arrays of empty structures
                 new Object[]{
-                    "{\"key\":123}",
-                    "{\"key\":123}",
-                },
-                new Object[]{
-                    "{\"key\":\"value\"}",
-                    "{\"key\":\"value\"}",
-                },
-                new Object[]{
-                    "[\"value1\",\"null\"]",
-                    "[\"value1\",\"null\"]"
-                },
-                new Object[]{
-                    "{\"key1\":\"value1\",\"key2\":\"value2\"}",
-                    "{\"key1\":\"value1\",\"key2\":\"value2\"}"
-                },
-                new Object[]{
-                    "{\"key1\":{\"key11\":\"value11\",\"key12\":{}}}",
-                    "{\"key1\":{\"key11\":\"value11\",\"key12\":{}}}"
+                    "[{},{},null,{}]",
+                    "[{},{},{}]"
                 }
             };
 
