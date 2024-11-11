@@ -14,12 +14,19 @@ A Java library for sending user events to a specified API endpoint with built-in
 
 Add the following dependency to your project:
 
+### Maven
 ```xml
 <dependency>
     <groupId>com.moloco.mcm</groupId>
     <artifactId>user-event-sink-connector</artifactId>
     <version>0.1.0</version>
 </dependency>
+
+### Gradle (Kotlin DSL)
+```kotlin
+dependencies {
+    implementation("com.moloco.mcm:user-event-sink-connector:0.1.0")
+}
 ```
 
 ## Usage
