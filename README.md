@@ -51,11 +51,11 @@ try {
 
 The example implementation handles these key parameters:
 
-- `platformID`: Platform identifier
-- `eventApiHostname`: API endpoint hostname
-- `eventApiKey`: Authentication key
-- `maxTotalConnections`: Connection pool limit (defaults to 100)
-- `maxConnectionsPerRoute`: Per-route connection limit (defaults to 10)
+- `PLATFORM_ID`: Platform identifier
+- `API_HOSTNAME`: API endpoint hostname
+- `API_KEY`: User Event API Authentication key
+- `MAX_TOTAL_CONNECTIONS`: Connection pool limit (defaults to 100)
+- `MAX_CONNECTIONS_PER_ROUTE`: Per-route connection limit (defaults to 10)
 
 ### Error Handling
 
@@ -66,10 +66,11 @@ The implementation demonstrates handling of:
 
 ### Best Practices Demonstrated
 
-1. Proper resource cleanup with `close()` method
-2. Comprehensive error handling
-3. Configurable connection pooling
-4. Try-with-resources pattern usage
+1. Connector initialization with configurable connection pooling
+2. Sending various event types
+3. Retry logic with exponential backoff
+4. Proper resource cleanup with `close()` method
+5. Error handling for both validation and network errors
 
 ## Technical Requirements
 
