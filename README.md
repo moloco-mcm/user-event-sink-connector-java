@@ -1,6 +1,6 @@
 # User Event Sink Connector (Reference Implementation)
 
-A reference implementation in Java demonstrating how to build a connector for sending user events to an API endpoint. This implementation showcases best practices for connection pooling, validation, and error handling that you can adapt for your own user event data ingestion services.
+A reference implementation in Java demonstrating how to build a connector for sending user events to Moloco MCM's User Event ingestion API endpoint. This implementation showcases best practices for connection pooling, validation, and error handling that you can adapt for your own user event data ingestion services.
 
 ## Features Demonstrated
 
