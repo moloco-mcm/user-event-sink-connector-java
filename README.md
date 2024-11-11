@@ -21,6 +21,7 @@ Add the following dependency to your project:
     <artifactId>user-event-sink-connector</artifactId>
     <version>0.1.0</version>
 </dependency>
+```
 
 ### Gradle (Kotlin DSL)
 ```kotlin
