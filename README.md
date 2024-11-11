@@ -1,8 +1,8 @@
-# User Event Sink Connector
+# User Event Sink Connector (Reference Implementation)
 
-A Java library for sending user events to a specified API endpoint with built-in connection pooling, validation, and error handling.
+A reference implementation in Java demonstrating how to build a connector for sending user events to an API endpoint. This implementation showcases best practices for connection pooling, validation, and error handling that you can adapt for your own user event data ingestion services.
 
-## Features
+## Features Demonstrated
 
 - HTTP connection pooling with configurable limits
 - JSON payload validation and null filtering
@@ -10,44 +10,29 @@ A Java library for sending user events to a specified API endpoint with built-in
 - Support for both String and JsonNode input formats
 - Comprehensive error handling and validation
 
-## Installation
+## Implementation Overview
 
-Add the following dependency to your project:
+This reference code shows how to:
 
-### Maven
-```xml
-<dependency>
-    <groupId>com.moloco.mcm</groupId>
-    <artifactId>user-event-sink-connector</artifactId>
-    <version>0.1.0</version>
-</dependency>
-```
-
-### Gradle (Kotlin DSL)
-```kotlin
-dependencies {
-    implementation("com.moloco.mcm:user-event-sink-connector:0.1.0")
-}
-```
-
-## Usage
-
-### Basic Implementation
-
+### Initialize a Connector
 ```java
-// Initialize the connector
 UserEventSinkConnector connector = new UserEventSinkConnector(
     "YOUR_PLATFORM_ID",
     "api.example.com",
     "your-api-key",
     100, // maxTotalConnections
-    10 // maxConnectionsPerRoute
+    10  // maxConnectionsPerRoute
 );
+```
+
+### Send Events
+```java
 try {
-    // Send event using JSON string
+    // Using JSON string
     String jsonString = "{\"event_type\":\"PAGE_VIEW\",\"user_id\":\"123\"}";
     connector.send(jsonString);
-    // Or send event using JsonNode
+
+    // Using JsonNode
     ObjectMapper mapper = new ObjectMapper();
     JsonNode jsonNode = mapper.readTree(jsonString);
     connector.send(jsonNode);
@@ -56,47 +41,61 @@ try {
 } catch (IllegalArgumentException e) {
     // Handle validation errors
 } finally {
-    connector.close(); // Always close the connector when done
+    connector.close();
 }
 ```
 
-### Configuration Options
+## Key Components
 
-The connector accepts the following parameters:
+### Configuration Parameters
 
-- `platformID`: Your platform identifier (required)
-- `eventApiHostname`: API endpoint hostname (required)
-- `eventApiKey`: Authentication key for the API (required)
-- `maxTotalConnections`: Maximum number of concurrent connections (defaults to 100)
-- `maxConnectionsPerRoute`: Maximum connections per route (defaults to 10)
+The example implementation handles these key parameters:
+
+- `platformID`: Platform identifier
+- `eventApiHostname`: API endpoint hostname
+- `eventApiKey`: Authentication key
+- `maxTotalConnections`: Connection pool limit (defaults to 100)
+- `maxConnectionsPerRoute`: Per-route connection limit (defaults to 10)
 
 ### Error Handling
 
-The connector throws two types of exceptions:
+The implementation demonstrates handling of:
 
-- `IllegalArgumentException`: For validation errors (null/empty inputs)
+- `IllegalArgumentException`: For validation errors
 - `IOException`: For network and API communication errors
 
-### Best Practices
+### Best Practices Demonstrated
 
-1. Always close the connector using the `close()` method when done
-2. Implement proper error handling for both validation and network errors
-3. Configure connection pool sizes based on your application's needs
-4. Use try-with-resources or try-finally blocks to ensure proper resource cleanup
+1. Proper resource cleanup with `close()` method
+2. Comprehensive error handling
+3. Configurable connection pooling
+4. Try-with-resources pattern usage
 
-## Dependencies
+## Technical Requirements
 
-- Jackson (`com.fasterxml.jackson.databind`)
-- Apache HttpComponents Client 5.x
+To run this reference implementation, you'll need:
+
 - Java 11 or higher
+- Jackson library for JSON processing
+- Apache HttpComponents Client 5.x
 
-## Building
+## Building the Example
 
 ```bash
 ./gradlew clean build
 ```
 
+## Using This Reference
+
+Feel free to:
+- Study the implementation patterns
+- Copy and modify the code for your needs
+- Use it as a starting point for your own connector
+- Adapt the error handling and validation logic
 
 ## License
 
 © Moloco, Inc. 2024 All rights reserved. Released under Apache 2.0 License
+
+---
+**Note**: This is a reference implementation intended to demonstrate best practices. You should adapt and modify this code to meet your specific requirements and security needs.
