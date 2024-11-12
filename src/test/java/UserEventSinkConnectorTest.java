@@ -2,14 +2,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.moloco.mcm.UserEventSinkConnector;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import java.io.IOException;
 
 @DisplayName("UserEventSinkConnector Tests")
 class UserEventSinkConnectorTest {
@@ -24,13 +22,12 @@ class UserEventSinkConnectorTest {
     private static final String EVENT_TYPE_HOME = "HOME";
 
     private UserEventSinkConnector connector;
-    private ObjectMapper objectMapper;
+
 
     @BeforeEach
     void setUp() {
-        objectMapper = new ObjectMapper();
         try {
-            connector = new UserEventSinkConnector(TEST_PLATFORM, TEST_URL, TEST_API_KEY, 100, 10);
+            connector = new UserEventSinkConnector(TEST_PLATFORM, TEST_URL, TEST_API_KEY, 100);
         } catch (IllegalArgumentException e) {
             
         }
@@ -51,7 +48,7 @@ class UserEventSinkConnectorTest {
         void testUserEventSinkConnectorWithNullParameter1() {
             IllegalArgumentException exception = assertThrows(
                     IllegalArgumentException.class,
-                    () -> new UserEventSinkConnector(null, TEST_URL, TEST_API_KEY, 100, 10)
+                    () -> new UserEventSinkConnector(null, TEST_URL, TEST_API_KEY, 100)
             );
 
             assertEquals("platformID cannot be null or empty", exception.getMessage());
@@ -62,7 +59,7 @@ class UserEventSinkConnectorTest {
         void testUserEventSinkConnectorWithNullParameter2() {
             IllegalArgumentException exception = assertThrows(
                     IllegalArgumentException.class,
-                    () -> new UserEventSinkConnector(TEST_PLATFORM, null, TEST_API_KEY, 100, 10)
+                    () -> new UserEventSinkConnector(TEST_PLATFORM, null, TEST_API_KEY, 100)
             );
 
             assertEquals("eventApiHostname cannot be null or empty", exception.getMessage());
@@ -73,7 +70,7 @@ class UserEventSinkConnectorTest {
         void testUserEventSinkConnectorWithNullParameter3() {
             IllegalArgumentException exception = assertThrows(
                     IllegalArgumentException.class,
-                    () -> new UserEventSinkConnector(TEST_PLATFORM, TEST_URL, null, 100, 10)
+                    () -> new UserEventSinkConnector(TEST_PLATFORM, TEST_URL, null, 100)
             );
 
             assertEquals("eventApiKey cannot be null or empty", exception.getMessage());

@@ -35,15 +35,13 @@ public class UserEventSinkConnector {
      * @param eventApiHostname the hostname of the user event API
      * @param eventApiKey the User Event API key for authentication
      * @param maxTotalConnections the maximum total number of connections. Defaults to 100
-     * @param maxConnectionsPerRoute the maximum connections per route. Defaults to 10
      * @throws IllegalArgumentException if any of the required parameters are null or empty
      */
     public UserEventSinkConnector(
         String platformID, 
         String eventApiHostname, 
         String eventApiKey, 
-        int maxTotalConnections, 
-        int maxConnectionsPerRoute) 
+        int maxTotalConnections) 
         throws IllegalArgumentException {
         // Validate constructor parameters
         this.platformID = validateParameter("platformID", platformID);
@@ -55,7 +53,7 @@ public class UserEventSinkConnector {
 
         PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
         connectionManager.setMaxTotal(maxTotalConnections <= 0 ? 100 : maxTotalConnections);
-        connectionManager.setDefaultMaxPerRoute(maxConnectionsPerRoute <= 0 ? 10 : maxConnectionsPerRoute);
+        connectionManager.setDefaultMaxPerRoute(maxTotalConnections <= 0 ? 100 : maxTotalConnections);
 
         this.httpClient = HttpClients.custom()
                 .setConnectionManager(connectionManager)

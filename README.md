@@ -20,8 +20,7 @@ UserEventSinkConnector connector = new UserEventSinkConnector(
     "YOUR_PLATFORM_ID",
     "api.example.com",
     "your-api-key",
-    100, // maxTotalConnections
-    10  // maxConnectionsPerRoute
+    100 // maxTotalConnections
 );
 ```
 
@@ -55,7 +54,6 @@ The example implementation handles these key parameters:
 - `API_HOSTNAME`: API endpoint hostname
 - `API_KEY`: User Event API Authentication key
 - `MAX_TOTAL_CONNECTIONS`: Connection pool limit (defaults to 100)
-- `MAX_CONNECTIONS_PER_ROUTE`: Per-route connection limit (defaults to 10)
 
 ### Error Handling
 

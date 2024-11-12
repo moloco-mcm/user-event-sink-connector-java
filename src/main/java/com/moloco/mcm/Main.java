@@ -27,7 +27,6 @@ public class Main {
         
         // Default to 100 and 10 if env vars not set
         int maxTotalConnections = Integer.parseInt(System.getenv().getOrDefault("MAX_TOTAL_CONNECTIONS", "100"));
-        int maxConnectionsPerRoute = Integer.parseInt(System.getenv().getOrDefault("MAX_CONNECTIONS_PER_ROUTE", "10"));
         UserEventSinkConnector connector = null;
 
         try {
@@ -36,8 +35,7 @@ public class Main {
                 platformId,
                 apiHostname,
                 apiKey,
-                maxTotalConnections,
-                maxConnectionsPerRoute
+                maxTotalConnections
             );
 
             ObjectMapper mapper = new ObjectMapper();
