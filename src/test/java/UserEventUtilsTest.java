@@ -306,10 +306,11 @@ class UserEventUtilsTest {
         @Test
         void shouldValidateItemPageViewEvent() throws Exception {
             TestCase[] testCases = {
-                    new TestCase("{\"items\":null}", false),
-                    new TestCase("{\"items\":{}}", false),
-                    new TestCase("{\"items\":[]}", false),
-                    new TestCase("{\"items\":[{}]}", true)
+                new TestCase("{}", false),
+                new TestCase("{\"items\":null}", false),
+                new TestCase("{\"items\":{}}", false),
+                new TestCase("{\"items\":[]}", false),
+                new TestCase("{\"items\":[{}]}", true)
             };
 
             for (TestCase testCase : testCases) {
@@ -366,13 +367,14 @@ class UserEventUtilsTest {
         @Test
         void shouldValidatePurchaseEvent() throws Exception {
             TestCase[] testCases = {
-                    new TestCase(
-                            "{\"items\":[{\"id\":\"396172\",\"price\":{\"currency\":\"USD\",\"amount\":\"429.98\"},\"quantity\":\"1\"}]}",
-                            true
-                    ),
-                    new TestCase("{\"items\":[]}", false),
-                    new TestCase("{\"items\":null}", false),
-                    new TestCase("{\"items\":{}}", false)
+                new TestCase(
+                        "{\"items\":[{\"id\":\"396172\",\"price\":{\"currency\":\"USD\",\"amount\":\"429.98\"},\"quantity\":\"1\"}]}",
+                        true
+                ),
+                new TestCase("{}", false),
+                new TestCase("{\"items\":[]}", false),
+                new TestCase("{\"items\":null}", false),
+                new TestCase("{\"items\":{}}", false)
             };
 
             for (TestCase testCase : testCases) {

@@ -192,7 +192,7 @@ public class UserEventUtils {
      */
     public JsonNode filterNulls(JsonNode jsonNode) {
         // Return early for null
-        if (jsonNode == null) {
+        if (jsonNode == null || jsonNode.isNull()) {
             return null;
         }
         // Return as-is for non-container nodes        
@@ -204,9 +204,6 @@ public class UserEventUtils {
         if (jsonNode.isArray()) {
             ArrayNode filteredArray = objectMapper.createArrayNode();
             for (JsonNode element : jsonNode) {
-                if (element.isNull()) {
-                    continue;
-                }
                 JsonNode filtered = filterNulls(element);
                 if (filtered != null) {
                     filteredArray.add(filtered);
@@ -235,15 +232,11 @@ public class UserEventUtils {
             // Handle arrays next
             if (value.isArray()) {
                 JsonNode filtered = filterArray(value);
-                if (filtered != null) {
-                    filteredNode.set(fieldName, filtered);
-                }
+                filteredNode.set(fieldName, filtered);
             }
             // Handle objects last
             JsonNode filtered = filterNulls(value);
-            if (filtered != null) {
-                filteredNode.set(fieldName, filtered);
-            }
+            filteredNode.set(fieldName, filtered);
         }
 
         return (JsonNode) filteredNode;
@@ -273,16 +266,12 @@ public class UserEventUtils {
             // Handle arrays next
             if (element.isArray()) {
                 JsonNode filtered = filterArray(element);
-                if (filtered != null) {
-                    filteredArray.add(filtered);
-                }
+                filteredArray.add(filtered);
                 continue;
             }
             // Handle objects last
             JsonNode filtered = filterNulls(element);
-            if (filtered != null) {
-                filteredArray.add(filtered);
-            }
+            filteredArray.add(filtered);
         }
         return filteredArray;
     }
