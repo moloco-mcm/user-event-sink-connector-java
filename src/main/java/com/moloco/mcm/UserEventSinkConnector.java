@@ -44,9 +44,9 @@ public class UserEventSinkConnector {
         int maxTotalConnections) 
         throws IllegalArgumentException {
         // Validate constructor parameters
-        this.platformID = validateParameter("platformID", platformID);
-        this.eventApiHostname = validateParameter("eventApiHostname", eventApiHostname);
-        this.eventApiKey = validateParameter("eventApiKey", eventApiKey);
+        this.platformID = sanitizeParameter("platformID", platformID);
+        this.eventApiHostname = sanitizeParameter("eventApiHostname", eventApiHostname);
+        this.eventApiKey = sanitizeParameter("eventApiKey", eventApiKey);
 
         this.utils = new UserEventUtils();
         this.objectMapper = new ObjectMapper();
@@ -61,18 +61,19 @@ public class UserEventSinkConnector {
     }
 
     /**
-     * Validates a parameter is not null or empty.
+     * Validates a parameter is not null or empty and removes CR (\r) and LF (\n) characters.
      *
      * @param paramName the name of the parameter being validated
      * @param value the value to validate
      * @return the validated value
      * @throws IllegalArgumentException if the value is null or empty
      */
-    private String validateParameter(String paramName, String value) throws IllegalArgumentException  {
+    private String sanitizeParameter(String paramName, String value) throws IllegalArgumentException  {
         if (value == null || value.trim().isEmpty()) {
             throw new IllegalArgumentException(paramName + " cannot be null or empty");
         }
-        return value.trim();
+        // Remove CR (\r) and LF (\n) characters
+        return value.trim().replaceAll("[\\r\\n]", "");
     }
 
     /**

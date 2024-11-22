@@ -81,6 +81,7 @@ public class Main {
                     try {
                         jsonData = mapper.readTree(jsonString);
                         connector.send(jsonData);
+                        System.out.println("Message sent: " + jsonString);
                         break; // Success - exit retry loop
                     } catch (IllegalArgumentException e) {
                         // If the JSON is invalid, throw the exception immediately
