@@ -19,11 +19,8 @@ repositories {
 java {
     withJavadocJar()
     withSourcesJar()
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
-    // toolchain {
-    //     languageVersion.set(JavaLanguageVersion.of(11))
-    // }
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
 }
 
 dependencies {
@@ -95,16 +92,15 @@ tasks.javadoc {
         encoding = "UTF-8"
         (this as StandardJavadocDocletOptions).apply {
             addStringOption("Xdoclint:none", "-quiet")
-            addBooleanOption("html5", true)
 
             // Add project information
             windowTitle = "$project.name $project.version API"
             docTitle = "$project.name $project.version API Documentation"
-            bottom = "Copyright © 2024 Moloco, Inc. Built with JDK 11"
+            bottom = "Copyright © 2024 Moloco, Inc. Built with JDK 8"
 
             // Add links to Java SE and other dependencies' Javadoc
             links = listOf(
-                "https://docs.oracle.com/en/java/javase/11/docs/api/",
+                "https://docs.oracle.com/javase/8/docs/api/",
                 "https://javadoc.io/doc/org.apache.httpcomponents.client5/httpclient5/5.4/index.html",
                 "https://javadoc.io/doc/com.fasterxml.jackson.core/jackson-annotations/2.18.1/index.html",
                 "https://javadoc.io/doc/com.fasterxml.jackson.core/jackson-databind/2.18.1/index.html",
