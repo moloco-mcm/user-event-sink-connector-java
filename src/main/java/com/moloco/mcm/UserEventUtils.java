@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -39,14 +40,54 @@ public class UserEventUtils {
      */
     public UserEventUtils() {
         // Initialize the map with type codes and their corresponding methods
-        testActions.put("HOME", this::testHome);
-        testActions.put("LAND", this::testHome);
-        testActions.put("ITEM_PAGE_VIEW", this::testPDP);
-        testActions.put("ADD_TO_CART", this::testPDP);
-        testActions.put("ADD_TO_WISHLIST", this::testPDP);
-        testActions.put("SEARCH", this::testSearch);
-        testActions.put("PAGE_VIEW", this::testPageView);
-        testActions.put("PURCHASE", this::testPurchase);
+        testActions.put("HOME", new ThrowingConsumer<JsonNode>() {
+            @Override
+            public void accept(JsonNode jsonNode) throws IllegalArgumentException {
+                testHome(jsonNode);
+            }
+        });
+        testActions.put("LAND", new ThrowingConsumer<JsonNode>() {
+            @Override
+            public void accept(JsonNode jsonNode) throws IllegalArgumentException {
+                testHome(jsonNode);
+            }
+        });
+        testActions.put("ITEM_PAGE_VIEW", new ThrowingConsumer<JsonNode>() {
+            @Override
+            public void accept(JsonNode jsonNode) throws IllegalArgumentException {
+                testPDP(jsonNode);
+            }
+        });
+        testActions.put("ADD_TO_CART", new ThrowingConsumer<JsonNode>() {
+            @Override
+            public void accept(JsonNode jsonNode) throws IllegalArgumentException {
+                testPDP(jsonNode);
+            }
+        });
+        testActions.put("ADD_TO_WISHLIST", new ThrowingConsumer<JsonNode>() {
+            @Override
+            public void accept(JsonNode jsonNode) throws IllegalArgumentException {
+                testPDP(jsonNode);
+            }
+        });
+        testActions.put("SEARCH", new ThrowingConsumer<JsonNode>() {
+            @Override
+            public void accept(JsonNode jsonNode) throws IllegalArgumentException {
+                testSearch(jsonNode);
+            }
+        });
+        testActions.put("PAGE_VIEW", new ThrowingConsumer<JsonNode>() {
+            @Override
+            public void accept(JsonNode jsonNode) throws IllegalArgumentException {
+                testPageView(jsonNode);
+            }
+        });
+        testActions.put("PURCHASE", new ThrowingConsumer<JsonNode>() {
+            @Override
+            public void accept(JsonNode jsonNode) throws IllegalArgumentException {
+                testPurchase(jsonNode);
+            }
+        });
     }
 
     /**
@@ -218,9 +259,9 @@ public class UserEventUtils {
 
         // Handle object input
         ObjectNode filteredNode = objectMapper.createObjectNode();
-        var fields = jsonNode.fields();
+        Iterator<Map.Entry<String, JsonNode>> fields = jsonNode.fields();
         while (fields.hasNext()) {
-            var field = fields.next();
+            Map.Entry<String, JsonNode> field = fields.next();
             JsonNode value = field.getValue();
             String fieldName = field.getKey();
             
