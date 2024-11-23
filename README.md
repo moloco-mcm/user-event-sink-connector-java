@@ -17,7 +17,7 @@ This reference code shows how to:
 ### Initialize a Connector
 ```java
 UserEventSinkConnector connector = new UserEventSinkConnector(
-    "YOUR_PLATFORM_ID", "api.example.com","your-api-key")
+    "YOUR_PLATFORM_ID", "api.example.com", "your-api-key")
     .maxTotalConnections(8)
     .retryMaxAttempts(4)
     .retryExponentialBackoffMultiplier(2)
@@ -65,7 +65,7 @@ The implementation demonstrates handling of:
 - `ParseException`: if header elements cannot be parsed
 - `IOException`: if an error occurs reading the input stream
 - `UnsupportedCharsetException` when the named charset is not available in this instance of the Java virtual machine
-- `InterruptedException`: if any thread has interrupted the current thread. The __interrupted status__ of the current thread is cleared when this exception is thrown.
+- `InterruptedException`: if any thread has interrupted the current thread. The _interrupted status_ of the current thread is cleared when this exception is thrown.
 
 ### Best Practices Demonstrated
 
