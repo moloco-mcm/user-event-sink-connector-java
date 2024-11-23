@@ -22,13 +22,18 @@ import java.util.Objects;
 public class UserEventSinkConnector {
 
     private final int DEFAULT_MAX_TOTAL_CONNECTIONS = 16;
+    private final int DEFAULT_RETRY_MAX_ATTEMPTS = 3;
+    private final int DEFAULT_RETRY_EXPONENTIAL_BACKOFF_MULTIPLIER = 2;
+    private final int DEFAULT_RETRY_MAX_DELAY_SECONDS = 10;
     private final String eventApiHostname;
     private final String eventApiKey;
     private final String platformID;
     private final UserEventUtils utils;
     private CloseableHttpClient httpClient;
     private int maxTotalConnections = DEFAULT_MAX_TOTAL_CONNECTIONS;
-
+    private int retryMaxAttempts = DEFAULT_RETRY_MAX_ATTEMPTS;
+    private int retryExponentialBackoffMultiplier = DEFAULT_RETRY_EXPONENTIAL_BACKOFF_MULTIPLIER;
+    private int retryMaxDelaySeconds = DEFAULT_RETRY_MAX_DELAY_SECONDS;
 
     /**
      * Constructs a new UserEventSinkConnector with the specified platform ID, API hostname, and key.
@@ -68,6 +73,32 @@ public class UserEventSinkConnector {
 
         return this;
     }
+
+    public UserEventSinkConnector retryMaxAttempts(int retryMaxAttempts) throws IllegalArgumentException {
+        if (retryMaxAttempts < 1) {
+            throw new IllegalArgumentException("retryMaxAttempts should be equal to or greater than one(1)");
+        }
+        this.retryMaxAttempts = retryMaxAttempts;
+        return this;
+    }
+
+    public UserEventSinkConnector retryExponentialBackoffMultiplier(int retryExponentialBackoffMultiplier) throws IllegalArgumentException {
+        if (retryExponentialBackoffMultiplier < 1) {
+            throw new IllegalArgumentException("retryExponentialBackoffMultiplier should be equal to or greater than one(1)");
+        }
+        this.retryExponentialBackoffMultiplier = retryExponentialBackoffMultiplier;
+        return this;
+    }
+
+    public UserEventSinkConnector retryMaxDelaySeconds(int retryMaxDelaySeconds) throws IllegalArgumentException {
+        if (retryMaxDelaySeconds < 1) {
+            throw new IllegalArgumentException("retryMaxDelaySeconds should be equal to or greater than one(1)");
+        }
+        this.retryMaxDelaySeconds = retryMaxDelaySeconds;
+        return this;
+    }
+
+
     /**
      * Validates a parameter is not null or empty and removes CR (\r) and LF (\n) characters.
      *
@@ -108,30 +139,14 @@ public class UserEventSinkConnector {
      * @throws IOException if an error occurs during sending or receiving the response  
      */
     public void send(JsonNode jsonNode) throws IllegalArgumentException, IOException {
-        if (jsonNode == null) {
-            throw new IllegalArgumentException("The jsonNode cannot be null");
-        }
-
         utils.validateData(jsonNode);
 
-        JsonNode filteredJson = utils.filterNulls(jsonNode);
-        if (filteredJson == null) {
-            throw new IllegalArgumentException("Failed to process JSON data: filtered result is null");
-        }
-
-        String url = String.format("%s/rmp/event/v1/platforms/%s/userevents",
-                eventApiHostname, platformID);
-
+        String url = String.format("%s/rmp/event/v1/platforms/%s/userevents", eventApiHostname, platformID);
         HttpPost postRequest = new HttpPost(url);
         postRequest.setHeader("Accept", "application/json");
         postRequest.setHeader("Content-Type", "application/json");
         postRequest.setHeader("x-api-key", eventApiKey);
-
-        StringEntity entity = new StringEntity(
-                filteredJson.toString(),
-                ContentType.APPLICATION_JSON
-        );
-        postRequest.setEntity(entity);
+        postRequest.setEntity(new StringEntity(utils.filterNulls(jsonNode).toString(), ContentType.APPLICATION_JSON));
 
         if (httpClient == null) {
             maxTotalConnections(maxTotalConnections);

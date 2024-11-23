@@ -59,6 +59,10 @@ public class UserEventUtils {
      * @throws IllegalArgumentException If the User Event data fails validation.
      */
     public void validateData(JsonNode jsonNode) throws IllegalArgumentException {
+        if (jsonNode == null) {
+            throw new IllegalArgumentException("The jsonNode cannot be null");
+        }
+
         // Test the common fields
         this.testCommon(jsonNode);
 

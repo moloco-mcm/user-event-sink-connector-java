@@ -216,7 +216,7 @@ class UserEventUtilsTest {
             );
 
             assertEquals(
-                    "jsonNode parameter cannot be null",
+                    "The jsonNode cannot be null",
                     exception.getMessage()
             );
         }
@@ -296,6 +296,20 @@ class UserEventUtilsTest {
                 this.input = input;
                 this.shouldPass = shouldPass;
             }
+        }
+
+        @Test
+        void shouldValidateCommonEvent() {
+            Exception exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> utils.testCommon(null)
+            );
+
+            assertEquals(
+                    "jsonNode parameter cannot be null",
+                    exception.getMessage()
+            );
+
         }
 
         @Test

@@ -140,8 +140,68 @@ class UserEventSinkConnectorTest {
                 "maxTotalConnections should be greater than zero (0)",
                 exception.getMessage()
             );
-
         }
+
+        @Test
+        @DisplayName("Should pass when retryMaxAttempts is 1")
+        void testRetryMaxAttempts1() {
+            connector.retryMaxAttempts(1);
+        }
+
+        @Test
+        @DisplayName("Should throw IllegalArgumentException when retryMaxAttempts is less than 1")
+        void testRetryMaxAttempts2() {
+            Exception exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> connector.retryMaxAttempts(0)
+            );
+
+            assertEquals(
+                "retryMaxAttempts should be equal to or greater than one(1)",
+                exception.getMessage()
+            );
+        }
+
+        @Test
+        @DisplayName("Should pass when retryExponentialBackoffMultiplier is 1")
+        void testRetryExponentialBackoffMultiplier1() {
+            connector.retryExponentialBackoffMultiplier(1);
+        }
+
+        @Test
+        @DisplayName("Should throw IllegalArgumentException when retryExponentialBackoffMultiplier is less than one(1)")
+        void testRetryExponentialBackoffMultiplier2() {
+            Exception exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> connector.retryExponentialBackoffMultiplier(0)
+            );
+
+            assertEquals(
+                "retryExponentialBackoffMultiplier should be equal to or greater than one(1)",
+                exception.getMessage()
+            );
+        }
+
+        @Test
+        @DisplayName("Should pass when retryMaxDelaySeconds is 1")
+        void testRetryMaxDelaySeconds1() {
+            connector.retryMaxDelaySeconds(1);
+        }
+
+        @Test
+        @DisplayName("Should throw IllegalArgumentException when retryMaxDelaySeconds is less than one(1)")
+        void testRetryMaxDelaySeconds2() {
+            Exception exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> connector.retryMaxDelaySeconds(0)
+            );
+
+            assertEquals(
+                "retryMaxDelaySeconds should be equal to or greater than one(1)",
+                exception.getMessage()
+            );
+        }
+
 
         @Test
         @DisplayName("Should throw Exception when timestamp is empty")
