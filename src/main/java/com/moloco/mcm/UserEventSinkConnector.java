@@ -33,7 +33,7 @@ public class UserEventSinkConnector {
     private int maxTotalConnections = DEFAULT_MAX_TOTAL_CONNECTIONS;
     private int retryMaxAttempts = DEFAULT_RETRY_MAX_ATTEMPTS;
     private int retryExponentialBackoffMultiplier = DEFAULT_RETRY_EXPONENTIAL_BACKOFF_MULTIPLIER;
-    private int retryDelayInternalSeconds = DEFAULT_RETRY_DELAY_SECONDS;
+    private int retryDelaySeconds = DEFAULT_RETRY_DELAY_SECONDS;
 
     /**
      * Constructs a new UserEventSinkConnector with the specified platform ID, API hostname, and key.
@@ -117,11 +117,11 @@ public class UserEventSinkConnector {
      * @return this instance for method chaining
      * @throws IllegalArgumentException if retryDelayInternalSeconds is less than one
      */
-    public UserEventSinkConnector retryDelayInternalSeconds(int retryDelayInternalSeconds) throws IllegalArgumentException {
-        if (retryDelayInternalSeconds < 1) {
-            throw new IllegalArgumentException("retryDelayInternalSeconds should be equal to or greater than one(1)");
+    public UserEventSinkConnector retryDelaySeconds(int retryDelaySeconds) throws IllegalArgumentException {
+        if (retryDelaySeconds < 1) {
+            throw new IllegalArgumentException("retryDelaySeconds should be equal to or greater than one(1)");
         }
-        this.retryDelayInternalSeconds = retryDelayInternalSeconds;
+        this.retryDelaySeconds = retryDelaySeconds;
         return this;
     }
 
@@ -196,7 +196,7 @@ public class UserEventSinkConnector {
         }
 
         int retryCount = 0;
-        int waitTimeMilliSeconds = this.retryDelayInternalSeconds * 1000;
+        int waitTimeMilliSeconds = this.retryDelaySeconds * 1000;
         while (retryCount < this.retryMaxAttempts) {
             try {
                 httpClient.execute(postRequest, this::handleResponse);

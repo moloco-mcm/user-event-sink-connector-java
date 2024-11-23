@@ -19,10 +19,10 @@ This reference code shows how to:
 UserEventSinkConnector connector = new UserEventSinkConnector(
     // Reach out to the Moloco MCM team to get yours!
     "YOUR_PLATFORM_ID", "api.example.com", "your-api-key")
-    .maxTotalConnections(8)
+    .maxTotalConnections(16)
     .retryMaxAttempts(4)
     .retryExponentialBackoffMultiplier(2)
-    .retryDelayInternalSeconds(1);
+    .retryDelaySeconds(1);
 
 ```
 
