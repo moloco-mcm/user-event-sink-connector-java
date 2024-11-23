@@ -17,7 +17,8 @@ This reference code shows how to:
 ### Initialize a Connector
 ```java
 UserEventSinkConnector connector = new UserEventSinkConnector(
-    "YOUR_PLATFORM_ID", "api.example.com", "your-api-key") // Reach out to the Moloco MCM team to get yours!
+    // Reach out to the Moloco MCM team to get yours!
+    "YOUR_PLATFORM_ID", "api.example.com", "your-api-key")
     .maxTotalConnections(8)
     .retryMaxAttempts(4)
     .retryExponentialBackoffMultiplier(2)
