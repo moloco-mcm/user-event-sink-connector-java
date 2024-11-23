@@ -149,15 +149,13 @@ public class UserEventSinkConnector {
      * @throws IllegalArgumentException if any argument is invalid, entity is null or if content length &gt; Integer.MAX_VALUE
      * @throws ParseException if header elements cannot be parsed
      * @throws IOException if an error occurs reading the input stream
-     * @throws UnsupportedCharsetException Thrown when the named charset is not available in
-     * this instance of the Java virtual machine
      * @throws  InterruptedException
      *          if any thread has interrupted the current thread. The
      *          <i>interrupted status</i> of the current thread is
      *          cleared when this exception is thrown.
      */
     public void send(String jsonString) 
-    throws IllegalArgumentException, ParseException, IOException, UnsupportedCharsetException, InterruptedException {
+    throws IllegalArgumentException, ParseException, IOException, InterruptedException {
         if (jsonString == null || jsonString.trim().isEmpty()) {
             throw new IllegalArgumentException("The jsonString cannot be null or empty");
         }
@@ -173,15 +171,13 @@ public class UserEventSinkConnector {
      * @throws IllegalArgumentException if any argument is invalid, entity is null or if content length &gt; Integer.MAX_VALUE
      * @throws ParseException if header elements cannot be parsed
      * @throws IOException if an error occurs reading the input stream
-     * @throws UnsupportedCharsetException Thrown when the named charset is not available in
-     * this instance of the Java virtual machine
      * @throws  InterruptedException
      *          if any thread has interrupted the current thread. The
      *          <i>interrupted status</i> of the current thread is
      *          cleared when this exception is thrown.
      */
     public void send(JsonNode jsonNode) 
-    throws IllegalArgumentException, ParseException, IOException, UnsupportedCharsetException, InterruptedException {
+    throws IllegalArgumentException, ParseException, IOException, InterruptedException {
         utils.validateData(jsonNode);
 
         String url = String.format("%s/rmp/event/v1/platforms/%s/userevents", eventApiHostname, platformID);
