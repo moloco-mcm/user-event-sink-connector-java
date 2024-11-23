@@ -22,7 +22,7 @@ import org.apache.hc.core5.io.CloseMode;
 public class UserEventSinkConnector {
 
     private final int DEFAULT_MAX_TOTAL_CONNECTIONS = 16;
-    private final int DEFAULT_RETRY_MAX_ATTEMPTS = 5;
+    private final int DEFAULT_RETRY_MAX_ATTEMPTS = 4;
     private final int DEFAULT_RETRY_EXPONENTIAL_BACKOFF_MULTIPLIER = 2;
     private final int DEFAULT_RETRY_DELAY_SECONDS = 1;
     private final String eventApiHostname;

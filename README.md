@@ -16,12 +16,12 @@ This reference code shows how to:
 
 ### Initialize a Connector
 ```java
-UserEventSinkConnector connector = new UserEventSinkConnector(
-    "YOUR_PLATFORM_ID",
-    "api.example.com",
-    "your-api-key",
-    100 // maxTotalConnections
-);
+UserEventSinkConnector connector = new UserEventSinkConnector("YOUR_PLATFORM_ID", "api.example.com","your-api-key")
+    .maxTotalConnections(8)
+    .retryMaxAttempts(4)
+    .retryExponentialBackoffMultiplier(2)
+    .retryDelayInternalSeconds(1);
+
 ```
 
 ### Send Events
@@ -35,10 +35,8 @@ try {
     ObjectMapper mapper = new ObjectMapper();
     JsonNode jsonNode = mapper.readTree(jsonString);
     connector.send(jsonNode);
-} catch (IOException e) {
-    // Handle network or API errors
-} catch (IllegalArgumentException e) {
-    // Handle validation errors
+} catch (IllegalArgumentException | ParseException | IOException | InterruptedException e) {
+    // Handle errors
 } finally {
     connector.close();
 }
@@ -53,28 +51,33 @@ The example implementation handles these key parameters:
 - `PLATFORM_ID`: Platform identifier
 - `API_HOSTNAME`: API endpoint hostname
 - `API_KEY`: User Event API Authentication key
-- `MAX_TOTAL_CONNECTIONS`: Connection pool limit (defaults to 100)
+- `MAX_TOTAL_CONNECTIONS`: Connection pool limit (defaults to 16)
+- `RETRY_MAX_ATTEMPTS`: The maximum number of retry attempts (defaults to 4)
+- `RETRY_EXPONENTIAL_BACKOFF_MULTIPLIER`: The multiplier for exponential backoff (defaults to 2)
+- `RETRY_DELAY_SECONDS`: The delay in seconds for the first retry attempt (defaults to 1)
 
 ### Error Handling
 
 The implementation demonstrates handling of:
 
-- `IllegalArgumentException`: For validation errors
-- `IOException`: For network and API communication errors
+- `IllegalArgumentException`: if any argument is invalid, entity is null or if content length > Integer.MAX_VALUE
+- `ParseException`: if header elements cannot be parsed
+- `IOException`: if an error occurs reading the input stream
+- `UnsupportedCharsetException` when the named charset is not available in this instance of the Java virtual machine
+- `InterruptedException`: if any thread has interrupted the current thread. The __interrupted status__ of the current thread is cleared when this exception is thrown.
 
 ### Best Practices Demonstrated
 
 1. Connector initialization with configurable connection pooling
 2. Sending various event types
-3. Retry logic with exponential backoff
 4. Proper resource cleanup with `close()` method
-5. Error handling for both validation and network errors
+5. Error handling for various errors
 
 ## Technical Requirements
 
 To run this reference implementation, you'll need:
 
-- Java 11 or higher
+- Java 8 or higher
 - Jackson library for JSON processing
 - Apache HttpComponents Client 5.x
 

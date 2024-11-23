@@ -26,7 +26,7 @@ public class Main {
         String apiHostname = System.getenv("API_HOSTNAME"); 
         String apiKey = System.getenv("API_KEY");
         
-        int maxTotalConnections = Integer.parseInt(System.getenv().getOrDefault("MAX_TOTAL_CONNECTIONS", "8"));
+        int maxTotalConnections = Integer.parseInt(System.getenv().getOrDefault("MAX_TOTAL_CONNECTIONS", "16"));
         int retryMaxAttempts = Integer.parseInt(System.getenv().getOrDefault("RETRY_MAX_ATTEMPTS", "4"));
         int retryExponentialBackoffMultiplier = Integer.parseInt(System.getenv().getOrDefault("RETRY_EXPONENTIAL_BACKOFF_MULTIPLIER", "2"));
         int retryDelayInternalSeconds = Integer.parseInt(System.getenv().getOrDefault("RETRY_DELAY_SECONDS", "1"));
