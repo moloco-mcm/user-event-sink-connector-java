@@ -16,7 +16,8 @@ This reference code shows how to:
 
 ### Initialize a Connector
 ```java
-UserEventSinkConnector connector = new UserEventSinkConnector("YOUR_PLATFORM_ID", "api.example.com","your-api-key")
+UserEventSinkConnector connector = new UserEventSinkConnector(
+    "YOUR_PLATFORM_ID", "api.example.com","your-api-key")
     .maxTotalConnections(8)
     .retryMaxAttempts(4)
     .retryExponentialBackoffMultiplier(2)
