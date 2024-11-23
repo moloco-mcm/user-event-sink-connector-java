@@ -21,12 +21,14 @@ import java.util.Objects;
  */
 public class UserEventSinkConnector {
 
+    private final int DEFAULT_MAX_TOTAL_CONNECTIONS = 16;
     private final String eventApiHostname;
     private final String eventApiKey;
     private final String platformID;
     private final UserEventUtils utils;
-    private final CloseableHttpClient httpClient;
-    private final ObjectMapper objectMapper;
+    private CloseableHttpClient httpClient;
+    private int maxTotalConnections = DEFAULT_MAX_TOTAL_CONNECTIONS;
+
 
     /**
      * Constructs a new UserEventSinkConnector with the specified platform ID, API hostname, and key.
@@ -40,26 +42,32 @@ public class UserEventSinkConnector {
     public UserEventSinkConnector(
         String platformID, 
         String eventApiHostname, 
-        String eventApiKey, 
-        int maxTotalConnections) 
+        String eventApiKey) 
         throws IllegalArgumentException {
         // Validate constructor parameters
         this.platformID = sanitizeParameter("platformID", platformID);
         this.eventApiHostname = sanitizeParameter("eventApiHostname", eventApiHostname);
         this.eventApiKey = sanitizeParameter("eventApiKey", eventApiKey);
-
         this.utils = new UserEventUtils();
-        this.objectMapper = new ObjectMapper();
+        this.maxTotalConnections(this.DEFAULT_MAX_TOTAL_CONNECTIONS);
+    }
+
+    public UserEventSinkConnector maxTotalConnections(int maxTotalConnections) throws IllegalArgumentException {
+        if (maxTotalConnections <= 0) {
+            throw new IllegalArgumentException("maxTotalConnections should be greater than zero (0)");
+        }
+        this.maxTotalConnections = maxTotalConnections;
+        this.close();
 
         PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
-        connectionManager.setMaxTotal(maxTotalConnections <= 0 ? 100 : maxTotalConnections);
-        connectionManager.setDefaultMaxPerRoute(maxTotalConnections <= 0 ? 100 : maxTotalConnections);
-
+        connectionManager.setMaxTotal(this.maxTotalConnections);
+        connectionManager.setDefaultMaxPerRoute(this.maxTotalConnections);
         this.httpClient = HttpClients.custom()
                 .setConnectionManager(connectionManager)
                 .build();
-    }
 
+        return this;
+    }
     /**
      * Validates a parameter is not null or empty and removes CR (\r) and LF (\n) characters.
      *
@@ -68,7 +76,7 @@ public class UserEventSinkConnector {
      * @return the validated value
      * @throws IllegalArgumentException if the value is null or empty
      */
-    private String sanitizeParameter(String paramName, String value) throws IllegalArgumentException  {
+    private String sanitizeParameter(String paramName, String value) throws IllegalArgumentException {
         if (value == null || value.trim().isEmpty()) {
             throw new IllegalArgumentException(paramName + " cannot be null or empty");
         }
@@ -87,7 +95,7 @@ public class UserEventSinkConnector {
         if (jsonString == null || jsonString.trim().isEmpty()) {
             throw new IllegalArgumentException("The jsonString cannot be null or empty");
         }
-
+        ObjectMapper objectMapper = new ObjectMapper();
         JsonNode jsonNode = objectMapper.readTree(jsonString);
         this.send(jsonNode);
     }
@@ -124,6 +132,10 @@ public class UserEventSinkConnector {
                 ContentType.APPLICATION_JSON
         );
         postRequest.setEntity(entity);
+
+        if (httpClient == null) {
+            maxTotalConnections(maxTotalConnections);
+        }
         httpClient.execute(postRequest, this::handleResponse);
     }
 
@@ -161,6 +173,7 @@ public class UserEventSinkConnector {
     public void close() {
         if (httpClient != null) {
             httpClient.close(CloseMode.GRACEFUL);
+            httpClient = null;
         }
     }
 }

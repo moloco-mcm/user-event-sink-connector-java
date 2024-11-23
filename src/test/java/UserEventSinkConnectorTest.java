@@ -27,7 +27,7 @@ class UserEventSinkConnectorTest {
     @BeforeEach
     void setUp() {
         try {
-            connector = new UserEventSinkConnector(TEST_PLATFORM, TEST_URL, TEST_API_KEY, 100);
+            connector = new UserEventSinkConnector(TEST_PLATFORM, TEST_URL, TEST_API_KEY);
         } catch (IllegalArgumentException e) {
             
         }
@@ -48,18 +48,30 @@ class UserEventSinkConnectorTest {
         void testUserEventSinkConnectorWithNullParameter1() {
             IllegalArgumentException exception = assertThrows(
                     IllegalArgumentException.class,
-                    () -> new UserEventSinkConnector(null, TEST_URL, TEST_API_KEY, 100)
+                    () -> new UserEventSinkConnector(null, TEST_URL, TEST_API_KEY)
             );
 
             assertEquals("platformID cannot be null or empty", exception.getMessage());
         }
 
         @Test
-        @DisplayName("Should throw IllegalArgumentException when API Hostname is null")
+        @DisplayName("Should throw IllegalArgumentException when Platform ID is empty")
         void testUserEventSinkConnectorWithNullParameter2() {
             IllegalArgumentException exception = assertThrows(
                     IllegalArgumentException.class,
-                    () -> new UserEventSinkConnector(TEST_PLATFORM, null, TEST_API_KEY, 100)
+                    () -> new UserEventSinkConnector("", TEST_URL, TEST_API_KEY)
+            );
+
+            assertEquals("platformID cannot be null or empty", exception.getMessage());
+        }
+
+
+        @Test
+        @DisplayName("Should throw IllegalArgumentException when API Hostname is null")
+        void testUserEventSinkConnectorWithNullParameter3() {
+            IllegalArgumentException exception = assertThrows(
+                    IllegalArgumentException.class,
+                    () -> new UserEventSinkConnector(TEST_PLATFORM, null, TEST_API_KEY)
             );
 
             assertEquals("eventApiHostname cannot be null or empty", exception.getMessage());
@@ -67,10 +79,10 @@ class UserEventSinkConnectorTest {
 
         @Test
         @DisplayName("Should throw IllegalArgumentException when API Key is null")
-        void testUserEventSinkConnectorWithNullParameter3() {
+        void testUserEventSinkConnectorWithNullParameter4() {
             IllegalArgumentException exception = assertThrows(
                     IllegalArgumentException.class,
-                    () -> new UserEventSinkConnector(TEST_PLATFORM, TEST_URL, null, 100)
+                    () -> new UserEventSinkConnector(TEST_PLATFORM, TEST_URL, null)
             );
 
             assertEquals("eventApiKey cannot be null or empty", exception.getMessage());
@@ -99,11 +111,38 @@ class UserEventSinkConnectorTest {
 
             assertEquals("The jsonString cannot be null or empty", exception.getMessage());
         }
+
+        @Test
+        @DisplayName("Should throw IllegalArgumentException when String content is empty")
+        void testSendEmptyString() {
+            IllegalArgumentException exception = assertThrows(
+                    IllegalArgumentException.class,
+                    () -> connector.send("")
+            );
+
+            assertEquals("The jsonString cannot be null or empty", exception.getMessage());
+        }
+
     }
 
     @Nested
     @DisplayName("Invalid Input Tests")
     class InvalidInputTests {
+        @Test
+        @DisplayName("Should throw IllegalArgumentException when maxTotalConnections is zero(0)")
+        void testZeroMaxTotalConnections() {
+            Exception exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> connector.maxTotalConnections(0)
+            );
+
+            assertEquals(
+                "maxTotalConnections should be greater than zero (0)",
+                exception.getMessage()
+            );
+
+        }
+
         @Test
         @DisplayName("Should throw Exception when timestamp is empty")
         void testSendEmptyTimestamp() {

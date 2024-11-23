@@ -26,7 +26,7 @@ public class Main {
         String apiKey = System.getenv("API_KEY");
         
         // Default to 100 and 10 if env vars not set
-        int maxTotalConnections = Integer.parseInt(System.getenv().getOrDefault("MAX_TOTAL_CONNECTIONS", "100"));
+        int maxTotalConnections = Integer.parseInt(System.getenv().getOrDefault("MAX_TOTAL_CONNECTIONS", "16"));
         UserEventSinkConnector connector = null;
 
         try {
@@ -34,12 +34,8 @@ public class Main {
             connector = new UserEventSinkConnector(
                 platformId,
                 apiHostname,
-                apiKey,
-                maxTotalConnections
-            );
-
-            ObjectMapper mapper = new ObjectMapper();
-            JsonNode jsonData = null;
+                apiKey
+            ).maxTotalConnections(maxTotalConnections);
 
             // Sample events are created and sent to the connector here:
             String[] jsonStrings = new String[]{
@@ -79,7 +75,8 @@ public class Main {
 
                 while (retryCount < maxRetries) {
                     try {
-                        jsonData = mapper.readTree(jsonString);
+                        ObjectMapper mapper = new ObjectMapper();
+                        JsonNode jsonData = mapper.readTree(jsonString);
                         connector.send(jsonData);
                         System.out.println("Message sent: " + jsonString);
                         break; // Success - exit retry loop
