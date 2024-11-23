@@ -2,19 +2,19 @@ package com.moloco.mcm;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
+import java.nio.charset.UnsupportedCharsetException;
+import java.util.Objects;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
 import org.apache.hc.core5.http.ClassicHttpResponse;
-import org.apache.hc.core5.http.ParseException;
-import org.apache.hc.core5.http.io.entity.StringEntity;
 import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.http.ParseException;
 import org.apache.hc.core5.http.io.entity.EntityUtils;
+import org.apache.hc.core5.http.io.entity.StringEntity;
 import org.apache.hc.core5.io.CloseMode;
-
-import java.io.IOException;
-import java.util.Objects;
 
 /**
  * The main library class for sending the user events to Moloco MCM's User Event API endpoint.
@@ -22,9 +22,9 @@ import java.util.Objects;
 public class UserEventSinkConnector {
 
     private final int DEFAULT_MAX_TOTAL_CONNECTIONS = 16;
-    private final int DEFAULT_RETRY_MAX_ATTEMPTS = 3;
+    private final int DEFAULT_RETRY_MAX_ATTEMPTS = 5;
     private final int DEFAULT_RETRY_EXPONENTIAL_BACKOFF_MULTIPLIER = 2;
-    private final int DEFAULT_RETRY_MAX_DELAY_SECONDS = 10;
+    private final int DEFAULT_RETRY_DELAY_SECONDS = 1;
     private final String eventApiHostname;
     private final String eventApiKey;
     private final String platformID;
@@ -33,7 +33,7 @@ public class UserEventSinkConnector {
     private int maxTotalConnections = DEFAULT_MAX_TOTAL_CONNECTIONS;
     private int retryMaxAttempts = DEFAULT_RETRY_MAX_ATTEMPTS;
     private int retryExponentialBackoffMultiplier = DEFAULT_RETRY_EXPONENTIAL_BACKOFF_MULTIPLIER;
-    private int retryMaxDelaySeconds = DEFAULT_RETRY_MAX_DELAY_SECONDS;
+    private int retryDelayInternalSeconds = DEFAULT_RETRY_DELAY_SECONDS;
 
     /**
      * Constructs a new UserEventSinkConnector with the specified platform ID, API hostname, and key.
@@ -41,7 +41,6 @@ public class UserEventSinkConnector {
      * @param platformID the platform ID (in capital letters and underscore character)
      * @param eventApiHostname the hostname of the user event API
      * @param eventApiKey the User Event API key for authentication
-     * @param maxTotalConnections the maximum total number of connections. Defaults to 100
      * @throws IllegalArgumentException if any of the required parameters are null or empty
      */
     public UserEventSinkConnector(
@@ -57,13 +56,20 @@ public class UserEventSinkConnector {
         this.maxTotalConnections(this.DEFAULT_MAX_TOTAL_CONNECTIONS);
     }
 
+    /**
+     * Sets the maximum total connections for the HTTP client.
+     * 
+     * @param maxTotalConnections the maximum total connections to set
+     * @return this instance for method chaining
+     * @throws IllegalArgumentException if maxTotalConnections is less than or equal to zero
+     */
     public UserEventSinkConnector maxTotalConnections(int maxTotalConnections) throws IllegalArgumentException {
         if (maxTotalConnections <= 0) {
             throw new IllegalArgumentException("maxTotalConnections should be greater than zero (0)");
         }
         this.maxTotalConnections = maxTotalConnections;
-        this.close();
 
+        this.close();
         PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
         connectionManager.setMaxTotal(this.maxTotalConnections);
         connectionManager.setDefaultMaxPerRoute(this.maxTotalConnections);
@@ -74,6 +80,13 @@ public class UserEventSinkConnector {
         return this;
     }
 
+    /**
+     * Sets the maximum number of retry attempts for failed requests.
+     * 
+     * @param retryMaxAttempts the maximum number of retry attempts
+     * @return this instance for method chaining
+     * @throws IllegalArgumentException if retryMaxAttempts is less than one
+     */
     public UserEventSinkConnector retryMaxAttempts(int retryMaxAttempts) throws IllegalArgumentException {
         if (retryMaxAttempts < 1) {
             throw new IllegalArgumentException("retryMaxAttempts should be equal to or greater than one(1)");
@@ -82,6 +95,13 @@ public class UserEventSinkConnector {
         return this;
     }
 
+    /**
+     * Sets the multiplier for exponential backoff in retry attempts.
+     * 
+     * @param retryExponentialBackoffMultiplier the multiplier for exponential backoff
+     * @return this instance for method chaining
+     * @throws IllegalArgumentException if retryExponentialBackoffMultiplier is less than one
+     */
     public UserEventSinkConnector retryExponentialBackoffMultiplier(int retryExponentialBackoffMultiplier) throws IllegalArgumentException {
         if (retryExponentialBackoffMultiplier < 1) {
             throw new IllegalArgumentException("retryExponentialBackoffMultiplier should be equal to or greater than one(1)");
@@ -90,11 +110,18 @@ public class UserEventSinkConnector {
         return this;
     }
 
-    public UserEventSinkConnector retryMaxDelaySeconds(int retryMaxDelaySeconds) throws IllegalArgumentException {
-        if (retryMaxDelaySeconds < 1) {
-            throw new IllegalArgumentException("retryMaxDelaySeconds should be equal to or greater than one(1)");
+    /**
+     * Sets the delay in seconds for the first retry attempt.
+     * 
+     * @param retryDelayInternalSeconds the delay in seconds for the first retry attempt
+     * @return this instance for method chaining
+     * @throws IllegalArgumentException if retryDelayInternalSeconds is less than one
+     */
+    public UserEventSinkConnector retryDelayInternalSeconds(int retryDelayInternalSeconds) throws IllegalArgumentException {
+        if (retryDelayInternalSeconds < 1) {
+            throw new IllegalArgumentException("retryDelayInternalSeconds should be equal to or greater than one(1)");
         }
-        this.retryMaxDelaySeconds = retryMaxDelaySeconds;
+        this.retryDelayInternalSeconds = retryDelayInternalSeconds;
         return this;
     }
 
@@ -119,10 +146,18 @@ public class UserEventSinkConnector {
      * Sends event data to the specified endpoint.
      *
      * @param jsonString a string representing the event data in JSON format
-     * @throws IllegalArgumentException if the input string is null or empty
-     * @throws IOException if an error occurs during sending or receiving the response
+     * @throws IllegalArgumentException if any argument is invalid, entity is null or if content length &gt; Integer.MAX_VALUE
+     * @throws ParseException if header elements cannot be parsed
+     * @throws IOException if an error occurs reading the input stream
+     * @throws UnsupportedCharsetException Thrown when the named charset is not available in
+     * this instance of the Java virtual machine
+     * @throws  InterruptedException
+     *          if any thread has interrupted the current thread. The
+     *          <i>interrupted status</i> of the current thread is
+     *          cleared when this exception is thrown.
      */
-    public void send(String jsonString) throws IllegalArgumentException, IOException {
+    public void send(String jsonString) 
+    throws IllegalArgumentException, ParseException, IOException, UnsupportedCharsetException, InterruptedException {
         if (jsonString == null || jsonString.trim().isEmpty()) {
             throw new IllegalArgumentException("The jsonString cannot be null or empty");
         }
@@ -135,10 +170,18 @@ public class UserEventSinkConnector {
      * Sends event data to the specified endpoint.
      *
      * @param jsonNode the event data represented as a FasterXML JSON Node
-     * @throws IllegalArgumentException if the input node is null
-     * @throws IOException if an error occurs during sending or receiving the response  
+     * @throws IllegalArgumentException if any argument is invalid, entity is null or if content length &gt; Integer.MAX_VALUE
+     * @throws ParseException if header elements cannot be parsed
+     * @throws IOException if an error occurs reading the input stream
+     * @throws UnsupportedCharsetException Thrown when the named charset is not available in
+     * this instance of the Java virtual machine
+     * @throws  InterruptedException
+     *          if any thread has interrupted the current thread. The
+     *          <i>interrupted status</i> of the current thread is
+     *          cleared when this exception is thrown.
      */
-    public void send(JsonNode jsonNode) throws IllegalArgumentException, IOException {
+    public void send(JsonNode jsonNode) 
+    throws IllegalArgumentException, ParseException, IOException, UnsupportedCharsetException, InterruptedException {
         utils.validateData(jsonNode);
 
         String url = String.format("%s/rmp/event/v1/platforms/%s/userevents", eventApiHostname, platformID);
@@ -151,7 +194,22 @@ public class UserEventSinkConnector {
         if (httpClient == null) {
             maxTotalConnections(maxTotalConnections);
         }
-        httpClient.execute(postRequest, this::handleResponse);
+
+        int retryCount = 0;
+        int waitTimeMilliSeconds = this.retryDelayInternalSeconds * 1000;
+        while (retryCount < this.retryMaxAttempts) {
+            try {
+                httpClient.execute(postRequest, this::handleResponse);
+                return;
+            } catch (Exception e) {
+                retryCount++;
+                if (retryCount == this.retryMaxAttempts) {
+                    throw e;
+                }
+                Thread.sleep(waitTimeMilliSeconds);
+                waitTimeMilliSeconds *= this.retryExponentialBackoffMultiplier;
+            }
+        }
     }
 
     /**
@@ -159,20 +217,21 @@ public class UserEventSinkConnector {
      *
      * @param response The HTTP response message
      * @return Content from a successful response
-     * @throws IOException If there's an issue with network communication or the HTTP response
+     * @throws ParseException if header elements cannot be parsed
+     * @throws IllegalArgumentException if entity is null or if content length &gt; Integer.MAX_VALUE
+     * @throws IOException if an error occurs reading the input stream
+     * @throws UnsupportedCharsetException Thrown when the named charset is not available in
+     * this instance of the Java virtual machine
      */
-    private String handleResponse(ClassicHttpResponse response) throws IOException {
+    private String handleResponse(ClassicHttpResponse response) 
+    throws ParseException, IllegalArgumentException, IOException, UnsupportedCharsetException {
         Objects.requireNonNull(response, "HTTP response cannot be null");
 
         int statusCode = response.getCode();
         String responseBody = "";
 
-        try {
-            if (response.getEntity() != null) {
-                responseBody = EntityUtils.toString(response.getEntity());
-            }
-        } catch (IOException | ParseException e) {
-            throw new IOException("Failed to read response body: " + e.getMessage(), e);
+        if (response.getEntity() != null) {
+            responseBody = EntityUtils.toString(response.getEntity());
         }
 
         if (200 <= statusCode && statusCode < 300) {

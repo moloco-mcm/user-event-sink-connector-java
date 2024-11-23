@@ -3,6 +3,7 @@ package com.moloco.mcm;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
+import org.apache.hc.core5.http.ParseException;
 
 /**
  * The Main class serves as the entry point for testing the UserEventSinkConnector
@@ -25,17 +26,19 @@ public class Main {
         String apiHostname = System.getenv("API_HOSTNAME"); 
         String apiKey = System.getenv("API_KEY");
         
-        // Default to 100 and 10 if env vars not set
-        int maxTotalConnections = Integer.parseInt(System.getenv().getOrDefault("MAX_TOTAL_CONNECTIONS", "16"));
+        int maxTotalConnections = Integer.parseInt(System.getenv().getOrDefault("MAX_TOTAL_CONNECTIONS", "8"));
+        int retryMaxAttempts = Integer.parseInt(System.getenv().getOrDefault("RETRY_MAX_ATTEMPTS", "4"));
+        int retryExponentialBackoffMultiplier = Integer.parseInt(System.getenv().getOrDefault("RETRY_EXPONENTIAL_BACKOFF_MULTIPLIER", "2"));
+        int retryDelayInternalSeconds = Integer.parseInt(System.getenv().getOrDefault("RETRY_DELAY_SECONDS", "1"));
         UserEventSinkConnector connector = null;
 
         try {
 
-            connector = new UserEventSinkConnector(
-                platformId,
-                apiHostname,
-                apiKey
-            ).maxTotalConnections(maxTotalConnections);
+            connector = new UserEventSinkConnector(platformId, apiHostname, apiKey)
+                .maxTotalConnections(maxTotalConnections)
+                .retryMaxAttempts(retryMaxAttempts)
+                .retryExponentialBackoffMultiplier(retryExponentialBackoffMultiplier)
+                .retryDelayInternalSeconds(retryDelayInternalSeconds);
 
             // Sample events are created and sent to the connector here:
             String[] jsonStrings = new String[]{
@@ -69,34 +72,12 @@ public class Main {
             };
 
             for (String jsonString : jsonStrings) {
-                int maxRetries = 3;
-                int retryCount = 0;
-                long waitTime = 100; // Start with 0.1 seconds
-
-                while (retryCount < maxRetries) {
-                    try {
-                        ObjectMapper mapper = new ObjectMapper();
-                        JsonNode jsonData = mapper.readTree(jsonString);
-                        connector.send(jsonData);
-                        System.out.println("Message sent: " + jsonString);
-                        break; // Success - exit retry loop
-                    } catch (IllegalArgumentException e) {
-                        // If the JSON is invalid, throw the exception immediately
-                        throw e;
-                    } catch (IOException e) {
-                        // If the other error occurs, retry the event
-                        retryCount++;
-                        if (retryCount == maxRetries) {
-                            System.err.println("Failed after " + maxRetries + " retries for event: " + jsonString);
-                            throw e;
-                        }
-                        System.out.println("Retry " + retryCount + " after " + waitTime + "ms");
-                        Thread.sleep(waitTime);
-                        waitTime *= 2; // Exponential backoff
-                    }
-                }
+                ObjectMapper mapper = new ObjectMapper();
+                JsonNode jsonData = mapper.readTree(jsonString);
+                connector.send(jsonData);
+                System.out.println("Message sent: " + jsonString);
             }
-        } catch (Exception e) {
+        } catch (IllegalArgumentException | ParseException | IOException | InterruptedException e) {
             e.printStackTrace();
         } finally {
             if (connector != null) {

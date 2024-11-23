@@ -1,6 +1,5 @@
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.moloco.mcm.UserEventSinkConnector;
 import org.junit.jupiter.api.AfterEach;
@@ -27,7 +26,11 @@ class UserEventSinkConnectorTest {
     @BeforeEach
     void setUp() {
         try {
-            connector = new UserEventSinkConnector(TEST_PLATFORM, TEST_URL, TEST_API_KEY);
+            connector = new UserEventSinkConnector(TEST_PLATFORM, TEST_URL, TEST_API_KEY)
+                .maxTotalConnections(1)
+                .retryMaxAttempts(1)
+                .retryExponentialBackoffMultiplier(1)
+                .retryDelayInternalSeconds(1);
         } catch (IllegalArgumentException e) {
             
         }
@@ -184,20 +187,20 @@ class UserEventSinkConnectorTest {
 
         @Test
         @DisplayName("Should pass when retryMaxDelaySeconds is 1")
-        void testRetryMaxDelaySeconds1() {
-            connector.retryMaxDelaySeconds(1);
+        void retryDelayInternalSecondsTest1() {
+            connector.retryDelayInternalSeconds(1);
         }
 
         @Test
-        @DisplayName("Should throw IllegalArgumentException when retryMaxDelaySeconds is less than one(1)")
-        void testRetryMaxDelaySeconds2() {
+        @DisplayName("Should throw IllegalArgumentException when retryDelayInternalSeconds is less than one(1)")
+        void retryDelayInternalSecondsTest2() {
             Exception exception = assertThrows(
                 IllegalArgumentException.class,
-                () -> connector.retryMaxDelaySeconds(0)
+                () -> connector.retryDelayInternalSeconds(0)
             );
 
             assertEquals(
-                "retryMaxDelaySeconds should be equal to or greater than one(1)",
+                "retryDelayInternalSeconds should be equal to or greater than one(1)",
                 exception.getMessage()
             );
         }
