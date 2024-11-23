@@ -65,7 +65,6 @@ The implementation demonstrates handling of:
 - `IllegalArgumentException`: if any argument is invalid, entity is null or if content length > Integer.MAX_VALUE
 - `ParseException`: if header elements cannot be parsed
 - `IOException`: if an error occurs reading the input stream
-- `UnsupportedCharsetException` when the named charset is not available in this instance of the Java virtual machine
 - `InterruptedException`: if any thread has interrupted the current thread. The _interrupted status_ of the current thread is cleared when this exception is thrown.
 
 ### Best Practices Demonstrated
