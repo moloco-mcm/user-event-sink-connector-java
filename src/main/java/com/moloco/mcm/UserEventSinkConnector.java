@@ -213,12 +213,12 @@ public class UserEventSinkConnector {
                 httpClient.execute(postRequest, this::handleResponse);
                 return;
             } catch (Exception e) {
-                retryCount++;
-                if (retryCount == this.retryMaxAttempts) {
+                if (retryCount == this.retryMaxAttempts - 1) {
                     throw e;
                 }
                 Thread.sleep(waitTimeMilliseconds);
                 waitTimeMilliseconds *= this.retryExponentialBackoffMultiplier;
+                retryCount++;
             }
         }
     }
