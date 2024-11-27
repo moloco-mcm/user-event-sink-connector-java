@@ -39,7 +39,7 @@ public class UserEventSinkConnector {
     private final int DEFAULT_MAX_TOTAL_CONNECTIONS = 16;
     private final int DEFAULT_RETRY_MAX_ATTEMPTS = 4;
     private final int DEFAULT_RETRY_EXPONENTIAL_BACKOFF_MULTIPLIER = 2;
-    private final int DEFAULT_RETRY_DELAY_SECONDS = 1;
+    private final int DEFAULT_RETRY_DELAY_MILLISECONDS = 100;
     private final String eventApiHostname;
     private final String eventApiKey;
     private final String platformID;
@@ -48,7 +48,7 @@ public class UserEventSinkConnector {
     private int maxTotalConnections = DEFAULT_MAX_TOTAL_CONNECTIONS;
     private int retryMaxAttempts = DEFAULT_RETRY_MAX_ATTEMPTS;
     private int retryExponentialBackoffMultiplier = DEFAULT_RETRY_EXPONENTIAL_BACKOFF_MULTIPLIER;
-    private int retryDelaySeconds = DEFAULT_RETRY_DELAY_SECONDS;
+    private int retryDelayMilliseconds = DEFAULT_RETRY_DELAY_MILLISECONDS;
 
     /**
      * Constructs a new UserEventSinkConnector with the specified platform ID, API hostname, and key.
@@ -128,15 +128,15 @@ public class UserEventSinkConnector {
     /**
      * Sets the delay in seconds for the first retry attempt.
      * 
-     * @param retryDelayInternalSeconds the delay in seconds for the first retry attempt
+     * @param retryDelayMilliseconds the delay in milliseconds for the first retry attempt
      * @return this instance for method chaining
      * @throws IllegalArgumentException if retryDelayInternalSeconds is less than one
      */
-    public UserEventSinkConnector retryDelaySeconds(int retryDelaySeconds) throws IllegalArgumentException {
-        if (retryDelaySeconds < 1) {
-            throw new IllegalArgumentException("retryDelaySeconds should be equal to or greater than one(1)");
+    public UserEventSinkConnector retryDelayMilliseconds(int retryDelayMilliseconds) throws IllegalArgumentException {
+        if (retryDelayMilliseconds < 1) {
+            throw new IllegalArgumentException("retryDelayMilliseconds should be equal to or greater than one(1)");
         }
-        this.retryDelaySeconds = retryDelaySeconds;
+        this.retryDelayMilliseconds = retryDelayMilliseconds;
         return this;
     }
 
@@ -207,7 +207,7 @@ public class UserEventSinkConnector {
         }
 
         int retryCount = 0;
-        int waitTimeMilliSeconds = this.retryDelaySeconds * 1000;
+        int waitTimeMilliseconds = this.retryDelayMilliseconds;
         while (retryCount < this.retryMaxAttempts) {
             try {
                 httpClient.execute(postRequest, this::handleResponse);
@@ -217,8 +217,8 @@ public class UserEventSinkConnector {
                 if (retryCount == this.retryMaxAttempts) {
                     throw e;
                 }
-                Thread.sleep(waitTimeMilliSeconds);
-                waitTimeMilliSeconds *= this.retryExponentialBackoffMultiplier;
+                Thread.sleep(waitTimeMilliseconds);
+                waitTimeMilliseconds *= this.retryExponentialBackoffMultiplier;
             }
         }
     }

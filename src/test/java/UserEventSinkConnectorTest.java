@@ -45,7 +45,7 @@ class UserEventSinkConnectorTest {
                 .maxTotalConnections(1)
                 .retryMaxAttempts(1)
                 .retryExponentialBackoffMultiplier(1)
-                .retryDelaySeconds(1);
+                .retryDelayMilliseconds(100);
         } catch (IllegalArgumentException e) {
             
         }
@@ -201,21 +201,21 @@ class UserEventSinkConnectorTest {
         }
 
         @Test
-        @DisplayName("Should pass when retryMaxDelaySeconds is 1")
-        void retryDelayInternalSecondsTest1() {
-            connector.retryDelaySeconds(1);
+        @DisplayName("Should pass when retryDelayMilliseconds is 1")
+        void retryDelayMilliseconds1() {
+            connector.retryDelayMilliseconds(1);
         }
 
         @Test
-        @DisplayName("Should throw IllegalArgumentException when retryDelayInternalSeconds is less than one(1)")
-        void retryDelayInternalSecondsTest2() {
+        @DisplayName("Should throw IllegalArgumentException when retryDelayMilliseconds is less than one(1)")
+        void retryDelayMilliseconds2() {
             Exception exception = assertThrows(
                 IllegalArgumentException.class,
-                () -> connector.retryDelaySeconds(0)
+                () -> connector.retryDelayMilliseconds(0)
             );
 
             assertEquals(
-                "retryDelaySeconds should be equal to or greater than one(1)",
+                "retryDelayMilliseconds should be equal to or greater than one(1)",
                 exception.getMessage()
             );
         }

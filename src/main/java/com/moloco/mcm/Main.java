@@ -44,7 +44,7 @@ public class Main {
         int maxTotalConnections = Integer.parseInt(System.getenv().getOrDefault("MAX_TOTAL_CONNECTIONS", "16"));
         int retryMaxAttempts = Integer.parseInt(System.getenv().getOrDefault("RETRY_MAX_ATTEMPTS", "4"));
         int retryExponentialBackoffMultiplier = Integer.parseInt(System.getenv().getOrDefault("RETRY_EXPONENTIAL_BACKOFF_MULTIPLIER", "2"));
-        int retryDelaySeconds = Integer.parseInt(System.getenv().getOrDefault("RETRY_DELAY_SECONDS", "1"));
+        int retryDelayMilliseconds = Integer.parseInt(System.getenv().getOrDefault("RETRY_DELAY_MILLI_SECONDS", "100"));
         UserEventSinkConnector connector = null;
 
         try {
@@ -53,7 +53,7 @@ public class Main {
                 .maxTotalConnections(maxTotalConnections)
                 .retryMaxAttempts(retryMaxAttempts)
                 .retryExponentialBackoffMultiplier(retryExponentialBackoffMultiplier)
-                .retryDelaySeconds(retryDelaySeconds);
+                .retryDelayMilliseconds(retryDelayMilliseconds);
 
             // Sample events are created and sent to the connector here:
             String[] jsonStrings = new String[]{
