@@ -22,7 +22,7 @@ UserEventSinkConnector connector = new UserEventSinkConnector(
     .maxTotalConnections(16)
     .retryMaxAttempts(4)
     .retryExponentialBackoffMultiplier(2)
-    .retryDelaySeconds(1);
+    .retryDelayMilliseconds(100);
 
 ```
 
