@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.nio.charset.UnsupportedCharsetException;
 import java.util.Objects;
+import java.util.Random;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
@@ -180,7 +181,7 @@ public class UserEventSinkConnector {
     }
 
     /**
-     * Sends event data to the specified endpoint.
+     * Sends event data to the specified endpoint with jitter added to the exponential backoff.
      *
      * @param jsonNode the event data represented as a FasterXML JSON Node
      * @throws IllegalArgumentException if any argument is invalid, entity is null or if content length &gt; Integer.MAX_VALUE
@@ -208,6 +209,7 @@ public class UserEventSinkConnector {
 
         int retryCount = 0;
         int waitTimeMilliseconds = this.retryDelayMilliseconds;
+        Random random = new Random(); // For generating jitter
         while (retryCount < this.retryMaxAttempts) {
             try {
                 httpClient.execute(postRequest, this::handleResponse);
@@ -216,7 +218,9 @@ public class UserEventSinkConnector {
                 if (retryCount == this.retryMaxAttempts - 1) {
                     throw e;
                 }
-                Thread.sleep(waitTimeMilliseconds);
+                // Calculate jitter and add it to the wait time
+                int jitter = random.nextInt(100); // Generates a random number between 0 and 99 for jitter
+                Thread.sleep(waitTimeMilliseconds + jitter);
                 waitTimeMilliseconds *= this.retryExponentialBackoffMultiplier;
                 retryCount++;
             }
