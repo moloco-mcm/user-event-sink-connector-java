@@ -9,6 +9,7 @@ This Java reference implementation demonstrates how to build a connector for sen
 - Graceful connection management and cleanup
 - Support for both String and JsonNode input formats
 - Comprehensive error handling and validation
+- Exponential backoff retries with jitter: This implementation includes a strategy for retrying failed requests with increasing delays, incorporating randomness to avoid thundering herd problems.
 
 ## Implementation Overview
 
