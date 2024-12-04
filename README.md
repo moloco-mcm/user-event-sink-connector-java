@@ -57,7 +57,7 @@ The example implementation handles these key parameters:
 - `MAX_TOTAL_CONNECTIONS`: Connection pool limit (defaults to 16)
 - `RETRY_MAX_ATTEMPTS`: The maximum number of retry attempts (defaults to 4)
 - `RETRY_EXPONENTIAL_BACKOFF_MULTIPLIER`: The multiplier for exponential backoff (defaults to 2)
-- `RETRY_DELAY_SECONDS`: The delay in seconds for the first retry attempt (defaults to 1)
+- `RETRY_DELAY_MILLISECONDS`: The delay in milliseconds for the first retry attempt (defaults to 100)
 
 ### Error Handling
 
