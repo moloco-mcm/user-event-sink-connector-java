@@ -17,13 +17,15 @@ This reference code shows how to:
 
 ### Initialize a Connector
 ```java
-UserEventSinkConnector connector = new UserEventSinkConnector(
+UserEventSinkConnector connector = new UserEventSinkConnector.Builder()
     // Reach out to the Moloco MCM team to get yours!
-    "YOUR_PLATFORM_ID", "api.example.com", "your-api-key")
+    .platformID("YOUR_PLATFORM_ID")
+    .eventApiHostname("api.example.com")
+    .eventApiKey("your-api-key")
     .maxTotalConnections(16)
     .retryMaxAttempts(4)
     .retryExponentialBackoffMultiplier(2)
-    .retryDelayMilliseconds(100);
+    .retryDelayMilliseconds(100).build();
 
 ```
 
