@@ -34,7 +34,7 @@ import java.util.Objects;
 import java.util.Random;
 
 /**
- * The main library class for sending the user events to Moloco MCM's User Event API endpoint.
+ * The main library class for sending user events to Moloco MCM's User Event API endpoint.
  */
 public class UserEventSinkConnector {
 
@@ -54,26 +54,6 @@ public class UserEventSinkConnector {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    /**
-     * Constructs a new UserEventSinkConnector with the specified platform ID, API hostname, and key.
-     *
-     * @param platformID the platform ID (in capital letters and underscore character)
-     * @param eventApiHostname the hostname of the user event API
-     * @param eventApiKey the User Event API key for authentication
-     * @throws IllegalArgumentException if any of the required parameters are null or empty
-     */
-    public UserEventSinkConnector(
-            String platformID,
-            String eventApiHostname,
-            String eventApiKey)
-            throws IllegalArgumentException {
-        // Validate constructor parameters
-        this.platformID = sanitizeParameter("platformID", platformID);
-        this.eventApiHostname = sanitizeParameter("eventApiHostname", eventApiHostname);
-        this.eventApiKey = sanitizeParameter("eventApiKey", eventApiKey);
-        this.utils = new UserEventUtils();
-        this.maxTotalConnections(this.DEFAULT_MAX_TOTAL_CONNECTIONS);
-    }
 
     /**
      * Constructs a new UserEventSinkConnector with the specified parameters.
@@ -81,9 +61,9 @@ public class UserEventSinkConnector {
      * @param builder The builder with configuration parameters.
      */
     private UserEventSinkConnector(Builder builder) {
-        this.eventApiHostname = sanitizeParameter("eventApiHostname", builder.eventApiHostname);
-        this.eventApiKey = sanitizeParameter("eventApiKey", builder.eventApiKey);
-        this.platformID = sanitizeParameter("platformID", builder.platformID);
+        this.eventApiHostname = builder.eventApiHostname;
+        this.eventApiKey = builder.eventApiKey;
+        this.platformID = builder.platformID;
         this.maxTotalConnections = builder.maxTotalConnections;
         this.retryMaxAttempts = builder.retryMaxAttempts;
         this.retryExponentialBackoffMultiplier = builder.retryExponentialBackoffMultiplier;
@@ -91,27 +71,17 @@ public class UserEventSinkConnector {
         this.utils = new UserEventUtils();
     }
 
-    public Builder toBuilder() {
-        return new Builder()
-                .eventApiHostname(this.eventApiHostname)
-                .eventApiKey(this.eventApiKey)
-                .platformID(this.platformID)
-                .maxTotalConnections(this.maxTotalConnections)
-                .retryMaxAttempts(this.retryMaxAttempts)
-                .retryExponentialBackoffMultiplier(this.retryMaxAttempts)
-                .retryDelayMilliseconds(this.retryDelayMilliseconds);
-    }
     /**
-     * Ensures the HTTP client is initialized.
+     * Ensures the HTTP client is initialized for making requests.
      */
-    private void ensureHttpClient() {
+    private void ensureHttpClientInitialized() {
         if (httpClient == null) {
             synchronized (this) {
                 if (httpClient == null) {
                     PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
-                    connectionManager.setMaxTotal(this.maxTotalConnections);
-                    connectionManager.setDefaultMaxPerRoute(this.maxTotalConnections);
-                    this.httpClient = HttpClients.custom()
+                    connectionManager.setMaxTotal(maxTotalConnections);
+                    connectionManager.setDefaultMaxPerRoute(maxTotalConnections);
+                    httpClient = HttpClients.custom()
                             .setConnectionManager(connectionManager)
                             .build();
                 }
@@ -119,45 +89,6 @@ public class UserEventSinkConnector {
         }
     }
 
-    /**
-     * Sets the maximum total connections for the HTTP client.
-     *
-     * @param maxTotalConnections the maximum total connections to set
-     * @return this instance for method chaining
-     * @throws IllegalArgumentException if maxTotalConnections is less than or equal to zero
-     */
-    public UserEventSinkConnector maxTotalConnections(int maxTotalConnections) throws IllegalArgumentException {
-        if (maxTotalConnections <= 0) {
-            throw new IllegalArgumentException("maxTotalConnections should be greater than zero (0)");
-        }
-        this.maxTotalConnections = maxTotalConnections;
-
-        this.close();
-        PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
-        connectionManager.setMaxTotal(this.maxTotalConnections);
-        connectionManager.setDefaultMaxPerRoute(this.maxTotalConnections);
-        this.httpClient = HttpClients.custom()
-                .setConnectionManager(connectionManager)
-                .build();
-
-        return this;
-    }
-
-    /**
-     * Validates a parameter is not null or empty and removes CR (\r) and LF (\n) characters.
-     *
-     * @param paramName the name of the parameter being validated
-     * @param value the value to validate
-     * @return the validated value
-     * @throws IllegalArgumentException if the value is null or empty
-     */
-    private String sanitizeParameter(String paramName, String value) throws IllegalArgumentException {
-        if (value == null || value.trim().isEmpty()) {
-            throw new IllegalArgumentException(paramName + " cannot be null or empty");
-        }
-        // Remove CR (\r) and LF (\n) characters
-        return value.trim().replaceAll("[\\r\\n]", "");
-    }
 
     /**
      * Sends event data to the specified endpoint.
@@ -166,10 +97,7 @@ public class UserEventSinkConnector {
      * @throws IllegalArgumentException if any argument is invalid, entity is null or if content length &gt; Integer.MAX_VALUE
      * @throws ParseException if header elements cannot be parsed
      * @throws IOException if an error occurs reading the input stream
-     * @throws  InterruptedException
-     *          if any thread has interrupted the current thread. The
-     *          <i>interrupted status</i> of the current thread is
-     *          cleared when this exception is thrown.
+     * @throws InterruptedException if any thread has interrupted the current thread. The <i>interrupted status</i> of the current thread is cleared when this exception is thrown.
      */
     public void send(String jsonString)
             throws IllegalArgumentException, ParseException, IOException, InterruptedException {
@@ -188,10 +116,7 @@ public class UserEventSinkConnector {
      * @throws IllegalArgumentException if any argument is invalid, entity is null or if content length &gt; Integer.MAX_VALUE
      * @throws ParseException if header elements cannot be parsed
      * @throws IOException if an error occurs reading the input stream
-     * @throws  InterruptedException
-     *          if any thread has interrupted the current thread. The
-     *          <i>interrupted status</i> of the current thread is
-     *          cleared when this exception is thrown.
+     * @throws InterruptedException if any thread has interrupted the current thread. The <i>interrupted status</i> of the current thread is cleared when this exception is thrown.
      */
     public void send(JsonNode jsonNode)
             throws IllegalArgumentException, ParseException, IOException, InterruptedException {
@@ -204,13 +129,12 @@ public class UserEventSinkConnector {
         postRequest.setHeader("x-api-key", eventApiKey);
         postRequest.setEntity(new StringEntity(utils.filterNulls(jsonNode).toString(), ContentType.APPLICATION_JSON));
 
-        ensureHttpClient();
-
         int retryCount = 0;
         int waitTimeMilliseconds = this.retryDelayMilliseconds;
         Random random = new Random(); // For generating jitter
         while (retryCount < this.retryMaxAttempts) {
             try {
+                ensureHttpClientInitialized();
                 httpClient.execute(postRequest, this::handleResponse);
                 return;
             } catch (Exception e) {
@@ -234,8 +158,7 @@ public class UserEventSinkConnector {
      * @throws ParseException if header elements cannot be parsed
      * @throws IllegalArgumentException if entity is null or if content length &gt; Integer.MAX_VALUE
      * @throws IOException if an error occurs reading the input stream
-     * @throws UnsupportedCharsetException Thrown when the named charset is not available in
-     * this instance of the Java virtual machine
+     * @throws UnsupportedCharsetException if the named charset is not available in this instance of the Java virtual machine
      */
     private String handleResponse(ClassicHttpResponse response)
             throws ParseException, IllegalArgumentException, IOException, UnsupportedCharsetException {
@@ -277,55 +200,133 @@ public class UserEventSinkConnector {
         private int retryExponentialBackoffMultiplier = DEFAULT_RETRY_EXPONENTIAL_BACKOFF_MULTIPLIER;
         private int retryDelayMilliseconds = DEFAULT_RETRY_DELAY_MILLISECONDS;
 
-        public Builder eventApiHostname(String eventApiHostname) {
-            this.eventApiHostname = eventApiHostname;
+        /**
+         * Sets the event API hostname.
+         *
+         * @param eventApiHostname the hostname of the event API
+         * @return this Builder instance for method chaining
+         * @throws IllegalArgumentException if the hostname is null or empty
+         */
+        public Builder eventApiHostname(String eventApiHostname) throws IllegalArgumentException {
+            this.eventApiHostname = sanitizeParameter("eventApiHostname", eventApiHostname);
             return this;
         }
 
-        public Builder eventApiKey(String eventApiKey) {
-            this.eventApiKey = eventApiKey;
+        /**
+         * Sets the event API key.
+         *
+         * @param eventApiKey the API key for authentication
+         * @return this Builder instance for method chaining
+         * @throws IllegalArgumentException if the API key is null or empty
+         */
+        public Builder eventApiKey(String eventApiKey) throws IllegalArgumentException {
+            this.eventApiKey = sanitizeParameter("eventApiKey", eventApiKey);
             return this;
         }
 
-        public Builder platformID(String platformID) {
-            this.platformID = platformID;
+        /**
+         * Sets the platform ID.
+         *
+         * @param platformID the platform identifier
+         * @return this Builder instance for method chaining
+         * @throws IllegalArgumentException if the platform ID is null or empty
+         */
+        public Builder platformID(String platformID) throws IllegalArgumentException {
+            this.platformID = sanitizeParameter("platformID", platformID);
             return this;
         }
 
-        public Builder maxTotalConnections(int maxTotalConnections) {
+        /**
+         * Sets the maximum total connections for the HTTP client.
+         *
+         * @param maxTotalConnections the maximum total connections to set
+         * @return this Builder instance for method chaining
+         * @throws IllegalArgumentException if maxTotalConnections is less than or equal to zero
+         */
+        public Builder maxTotalConnections(int maxTotalConnections) throws IllegalArgumentException {
             if (maxTotalConnections <= 0) {
-                throw new IllegalArgumentException("maxTotalConnections should be greater than zero (0)");
+                throw new IllegalArgumentException("maxTotalConnections must be at least one(1)");
             }
             this.maxTotalConnections = maxTotalConnections;
             return this;
         }
 
-        public Builder retryMaxAttempts(int retryMaxAttempts) {
-            if (retryMaxAttempts < 1 || retryMaxAttempts > 10) {
-                throw new IllegalArgumentException("retryMaxAttempts should be between 1 and 10");
+        /**
+         * Sets the maximum number of retry attempts.
+         *
+         * @param retryMaxAttempts the maximum number of retry attempts
+         * @return this Builder instance for method chaining
+         * @throws IllegalArgumentException if retryMaxAttempts is less than 1 or greater than 10
+         */
+        public Builder retryMaxAttempts(int retryMaxAttempts) throws IllegalArgumentException {
+            if (retryMaxAttempts < 1 || 10 < retryMaxAttempts) {
+                throw new IllegalArgumentException("retryMaxAttempts must be between 1 and 10");
             }
             this.retryMaxAttempts = retryMaxAttempts;
             return this;
         }
 
-        public Builder retryExponentialBackoffMultiplier(int multiplier) {
-            if (multiplier < 1) {
-                throw new IllegalArgumentException("retryExponentialBackoffMultiplier should be equal to or greater than one(1)");
+        /**
+         * Sets the multiplier for exponential backoff.
+         *
+         * @param retryExponentialBackoffMultiplier the multiplier for exponential backoff
+         * @return this Builder instance for method chaining
+         * @throws IllegalArgumentException if multiplier is less than 1
+         */
+        public Builder retryExponentialBackoffMultiplier(int retryExponentialBackoffMultiplier) throws IllegalArgumentException {
+            if (retryExponentialBackoffMultiplier < 1) {
+                throw new IllegalArgumentException("retryExponentialBackoffMultiplier must be at least 1");
             }
-            this.retryExponentialBackoffMultiplier = multiplier;
+            this.retryExponentialBackoffMultiplier = retryExponentialBackoffMultiplier;
             return this;
         }
 
-        public Builder retryDelayMilliseconds(int delayMilliseconds) {
-            if (delayMilliseconds < 1) {
-                throw new IllegalArgumentException("retryDelayMilliseconds should be equal to or greater than one(1)");
+        /**
+         * Sets the delay in milliseconds for the first retry attempt.
+         *
+         * @param retryDelayMilliseconds the delay in milliseconds
+         * @return this Builder instance for method chaining
+         * @throws IllegalArgumentException if delayMilliseconds is less than 1
+         */
+        public Builder retryDelayMilliseconds(int retryDelayMilliseconds) throws IllegalArgumentException {
+            if (retryDelayMilliseconds < 1) {
+                throw new IllegalArgumentException("retryDelayMilliseconds must be at least one(1)");
             }
-            this.retryDelayMilliseconds = delayMilliseconds;
+            this.retryDelayMilliseconds = retryDelayMilliseconds;
             return this;
         }
 
-        public UserEventSinkConnector build() {
+        /**
+         * Builds a new UserEventSinkConnector instance.
+         *
+         * @return a new UserEventSinkConnector instance
+         * @throws IllegalArgumentException if any parameter is invalid
+         */
+        public UserEventSinkConnector build() throws IllegalArgumentException {
+            eventApiHostname(eventApiHostname);
+            eventApiKey(eventApiKey);
+            platformID(platformID);
+            maxTotalConnections(maxTotalConnections);
+            retryMaxAttempts(retryMaxAttempts);
+            retryExponentialBackoffMultiplier(retryExponentialBackoffMultiplier);
+            retryDelayMilliseconds(retryDelayMilliseconds);
             return new UserEventSinkConnector(this);
+        }
+
+        /**
+         * Validates a parameter is not null or empty and removes CR (\r) and LF (\n) characters.
+         *
+         * @param paramName the name of the parameter being validated
+         * @param value the value to validate
+         * @return the validated value
+         * @throws IllegalArgumentException if the value is null or empty
+         */
+        private String sanitizeParameter(String paramName, String value) throws IllegalArgumentException {
+            if (value == null || value.trim().isEmpty()) {
+                throw new IllegalArgumentException(paramName + " cannot be null or empty");
+            }
+            // Remove CR (\r) and LF (\n) characters
+            return value.trim().replaceAll("[\\r\\n]", "");
         }
     }
 }

@@ -68,7 +68,7 @@ class UserEventSinkConnectorTest {
         void testUserEventSinkConnectorWithNullParameter1() {
             IllegalArgumentException exception = assertThrows(
                     IllegalArgumentException.class,
-                    () -> new UserEventSinkConnector(null, TEST_URL, TEST_API_KEY)
+                    () -> new UserEventSinkConnector.Builder().platformID(null)
             );
 
             assertEquals("platformID cannot be null or empty", exception.getMessage());
@@ -79,7 +79,7 @@ class UserEventSinkConnectorTest {
         void testUserEventSinkConnectorWithNullParameter2() {
             IllegalArgumentException exception = assertThrows(
                     IllegalArgumentException.class,
-                    () -> new UserEventSinkConnector("", TEST_URL, TEST_API_KEY)
+                    () -> new UserEventSinkConnector.Builder().platformID("")
             );
 
             assertEquals("platformID cannot be null or empty", exception.getMessage());
@@ -91,7 +91,7 @@ class UserEventSinkConnectorTest {
         void testUserEventSinkConnectorWithNullParameter3() {
             IllegalArgumentException exception = assertThrows(
                     IllegalArgumentException.class,
-                    () -> new UserEventSinkConnector(TEST_PLATFORM, null, TEST_API_KEY)
+                    () -> new UserEventSinkConnector.Builder().eventApiHostname(null)
             );
 
             assertEquals("eventApiHostname cannot be null or empty", exception.getMessage());
@@ -102,7 +102,7 @@ class UserEventSinkConnectorTest {
         void testUserEventSinkConnectorWithNullParameter4() {
             IllegalArgumentException exception = assertThrows(
                     IllegalArgumentException.class,
-                    () -> new UserEventSinkConnector(TEST_PLATFORM, TEST_URL, null)
+                    () -> new UserEventSinkConnector.Builder().eventApiKey(null)
             );
 
             assertEquals("eventApiKey cannot be null or empty", exception.getMessage());
@@ -153,39 +153,85 @@ class UserEventSinkConnectorTest {
         void testZeroMaxTotalConnections() {
             Exception exception = assertThrows(
                 IllegalArgumentException.class,
-                () -> connector.maxTotalConnections(0)
+                () -> new UserEventSinkConnector.Builder().maxTotalConnections(0)
             );
 
             assertEquals(
-                "maxTotalConnections should be greater than zero (0)",
+                "maxTotalConnections must be at least one(1)",
+                exception.getMessage()
+            );
+        }
+
+
+        @Test
+        @DisplayName("Should throw IllegalArgumentException when maxTotalConnections is zero(0)")
+        void testRetryMaxAttempts1() {
+            Exception exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> new UserEventSinkConnector.Builder().retryMaxAttempts(0)
+            );
+
+            assertEquals(
+                "retryMaxAttempts must be between 1 and 10",
                 exception.getMessage()
             );
         }
 
         @Test
-        @DisplayName("Should pass when retryMaxAttempts is 1")
-        void testRetryMaxAttempts1() {
-            connector.toBuilder().retryMaxAttempts(1).build();
-        }
-
-        @Test
-        @DisplayName("Should throw IllegalArgumentException when retryMaxAttempts is less than 1")
+        @DisplayName("Should throw IllegalArgumentException when maxTotalConnections is 11")
         void testRetryMaxAttempts2() {
             Exception exception = assertThrows(
                 IllegalArgumentException.class,
-                () -> connector.toBuilder().retryMaxAttempts(0)
+                () -> new UserEventSinkConnector.Builder().retryMaxAttempts(11)
             );
 
             assertEquals(
-                "retryMaxAttempts should be between 1 and 10",
+                "retryMaxAttempts must be between 1 and 10",
                 exception.getMessage()
             );
         }
+
+
+        @Test
+        @DisplayName("Should pass when retryMaxAttempts is 1")
+        void testRetryMaxAttempts3() {
+            new UserEventSinkConnector.Builder().retryMaxAttempts(1);
+        }
+
+
+        @Test
+        @DisplayName("Should pass when retryMaxAttempts is 10")
+        void testRetryMaxAttempts4() {
+            new UserEventSinkConnector.Builder().retryMaxAttempts(10);
+        }
+
+
+        @Test
+        @DisplayName("Should throw IllegalArgumentException when retryMaxAttempts is less than 1")
+        void testRetryMaxAttempts5() {
+            Exception exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> new UserEventSinkConnector.Builder().retryMaxAttempts(0)
+            );
+
+            assertEquals(
+                "retryMaxAttempts must be between 1 and 10",
+                exception.getMessage()
+            );
+        }
+
+        @Test
+        @DisplayName("Should pass when maxTotalConnections is 1")
+        void testMaxTotalConnections1() {
+            new UserEventSinkConnector.Builder().maxTotalConnections(1);
+        }
+
+
 
         @Test
         @DisplayName("Should pass when retryExponentialBackoffMultiplier is 1")
         void testRetryExponentialBackoffMultiplier1() {
-            connector.toBuilder().retryExponentialBackoffMultiplier(1);
+            new UserEventSinkConnector.Builder().retryExponentialBackoffMultiplier(1);
         }
 
         @Test
@@ -193,11 +239,11 @@ class UserEventSinkConnectorTest {
         void testRetryExponentialBackoffMultiplier2() {
             Exception exception = assertThrows(
                 IllegalArgumentException.class,
-                () -> connector.toBuilder().retryExponentialBackoffMultiplier(0)
+                () -> new UserEventSinkConnector.Builder().retryExponentialBackoffMultiplier(0)
             );
 
             assertEquals(
-                "retryExponentialBackoffMultiplier should be equal to or greater than one(1)",
+                "retryExponentialBackoffMultiplier must be at least 1",
                 exception.getMessage()
             );
         }
@@ -205,7 +251,7 @@ class UserEventSinkConnectorTest {
         @Test
         @DisplayName("Should pass when retryDelayMilliseconds is 1")
         void retryDelayMilliseconds1() {
-            connector.toBuilder().retryDelayMilliseconds(1);
+            new UserEventSinkConnector.Builder().retryDelayMilliseconds(1);
         }
 
         @Test
@@ -213,11 +259,11 @@ class UserEventSinkConnectorTest {
         void retryDelayMilliseconds2() {
             Exception exception = assertThrows(
                 IllegalArgumentException.class,
-                () -> connector.toBuilder().retryDelayMilliseconds(0)
+                () -> new UserEventSinkConnector.Builder().retryDelayMilliseconds(0)
             );
 
             assertEquals(
-                "retryDelayMilliseconds should be equal to or greater than one(1)",
+                "retryDelayMilliseconds must be at least one(1)",
                 exception.getMessage()
             );
         }

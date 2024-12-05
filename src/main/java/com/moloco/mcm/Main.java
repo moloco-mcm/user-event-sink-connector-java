@@ -56,7 +56,8 @@ public class Main {
                     .maxTotalConnections(maxTotalConnections)
                     .retryMaxAttempts(retryMaxAttempts)
                     .retryExponentialBackoffMultiplier(retryExponentialBackoffMultiplier)
-                    .retryDelayMilliseconds(retryDelayMilliseconds).build();
+                    .retryDelayMilliseconds(retryDelayMilliseconds)
+                    .build();
 
             // Sample events are created and sent to the connector here:
             String[] jsonStrings = new String[]{

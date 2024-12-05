@@ -17,16 +17,18 @@ This reference code shows how to:
 
 ### Initialize a Connector
 ```java
+// Initialize a UserEventSinkConnector with required and optional parameters
 UserEventSinkConnector connector = new UserEventSinkConnector.Builder()
-    // Reach out to the Moloco MCM team to get yours!
-    .platformID("YOUR_PLATFORM_ID")
-    .eventApiHostname("api.example.com")
-    .eventApiKey("your-api-key")
-    .maxTotalConnections(16)
-    .retryMaxAttempts(4)
-    .retryExponentialBackoffMultiplier(2)
-    .retryDelayMilliseconds(100).build();
-
+        // Replace "PLATFORM_ID", "API_HOSTNAME", "API_KEY" with your actual values
+        .platformID("PLATFORM_ID") // This is a required parameter
+        .eventApiHostname("API_HOSTNAME") // This is a required parameter
+        .eventApiKey("API_KEY") // This is a required parameter
+        // Optional parameters with default values
+        .maxTotalConnections(16) // Defaults to 16 if not specified
+        .retryMaxAttempts(4) // Defaults to 4 if not specified
+        .retryExponentialBackoffMultiplier(2) // Defaults to 2 if not specified
+        .retryDelayMilliseconds(100) // Defaults to 100 if not specified
+        .build();
 ```
 
 ### Send Events
