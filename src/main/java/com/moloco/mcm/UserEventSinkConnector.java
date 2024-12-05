@@ -17,10 +17,6 @@ package com.moloco.mcm;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.IOException;
-import java.nio.charset.UnsupportedCharsetException;
-import java.util.Objects;
-import java.util.Random;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
@@ -32,15 +28,20 @@ import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.apache.hc.core5.http.io.entity.StringEntity;
 import org.apache.hc.core5.io.CloseMode;
 
+import java.io.IOException;
+import java.nio.charset.UnsupportedCharsetException;
+import java.util.Objects;
+import java.util.Random;
+
 /**
  * The main library class for sending the user events to Moloco MCM's User Event API endpoint.
  */
 public class UserEventSinkConnector {
 
-    private final int DEFAULT_MAX_TOTAL_CONNECTIONS = 16;
-    private final int DEFAULT_RETRY_MAX_ATTEMPTS = 4;
-    private final int DEFAULT_RETRY_EXPONENTIAL_BACKOFF_MULTIPLIER = 2;
-    private final int DEFAULT_RETRY_DELAY_MILLISECONDS = 100;
+    private static final int DEFAULT_MAX_TOTAL_CONNECTIONS = 16;
+    private static final int DEFAULT_RETRY_MAX_ATTEMPTS = 4;
+    private static final int DEFAULT_RETRY_EXPONENTIAL_BACKOFF_MULTIPLIER = 2;
+    private static final int DEFAULT_RETRY_DELAY_MILLISECONDS = 100;
     private final String eventApiHostname;
     private final String eventApiKey;
     private final String platformID;
@@ -51,6 +52,8 @@ public class UserEventSinkConnector {
     private int retryExponentialBackoffMultiplier = DEFAULT_RETRY_EXPONENTIAL_BACKOFF_MULTIPLIER;
     private int retryDelayMilliseconds = DEFAULT_RETRY_DELAY_MILLISECONDS;
 
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
     /**
      * Constructs a new UserEventSinkConnector with the specified platform ID, API hostname, and key.
      *
@@ -60,10 +63,10 @@ public class UserEventSinkConnector {
      * @throws IllegalArgumentException if any of the required parameters are null or empty
      */
     public UserEventSinkConnector(
-        String platformID, 
-        String eventApiHostname, 
-        String eventApiKey) 
-        throws IllegalArgumentException {
+            String platformID,
+            String eventApiHostname,
+            String eventApiKey)
+            throws IllegalArgumentException {
         // Validate constructor parameters
         this.platformID = sanitizeParameter("platformID", platformID);
         this.eventApiHostname = sanitizeParameter("eventApiHostname", eventApiHostname);
@@ -73,8 +76,52 @@ public class UserEventSinkConnector {
     }
 
     /**
+     * Constructs a new UserEventSinkConnector with the specified parameters.
+     *
+     * @param builder The builder with configuration parameters.
+     */
+    private UserEventSinkConnector(Builder builder) {
+        this.eventApiHostname = sanitizeParameter("eventApiHostname", builder.eventApiHostname);
+        this.eventApiKey = sanitizeParameter("eventApiKey", builder.eventApiKey);
+        this.platformID = sanitizeParameter("platformID", builder.platformID);
+        this.maxTotalConnections = builder.maxTotalConnections;
+        this.retryMaxAttempts = builder.retryMaxAttempts;
+        this.retryExponentialBackoffMultiplier = builder.retryExponentialBackoffMultiplier;
+        this.retryDelayMilliseconds = builder.retryDelayMilliseconds;
+        this.utils = new UserEventUtils();
+    }
+
+    public Builder toBuilder() {
+        return new Builder()
+                .eventApiHostname(this.eventApiHostname)
+                .eventApiKey(this.eventApiKey)
+                .platformID(this.platformID)
+                .maxTotalConnections(this.maxTotalConnections)
+                .retryMaxAttempts(this.retryMaxAttempts)
+                .retryExponentialBackoffMultiplier(this.retryMaxAttempts)
+                .retryDelayMilliseconds(this.retryDelayMilliseconds);
+    }
+    /**
+     * Ensures the HTTP client is initialized.
+     */
+    private void ensureHttpClient() {
+        if (httpClient == null) {
+            synchronized (this) {
+                if (httpClient == null) {
+                    PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
+                    connectionManager.setMaxTotal(this.maxTotalConnections);
+                    connectionManager.setDefaultMaxPerRoute(this.maxTotalConnections);
+                    this.httpClient = HttpClients.custom()
+                            .setConnectionManager(connectionManager)
+                            .build();
+                }
+            }
+        }
+    }
+
+    /**
      * Sets the maximum total connections for the HTTP client.
-     * 
+     *
      * @param maxTotalConnections the maximum total connections to set
      * @return this instance for method chaining
      * @throws IllegalArgumentException if maxTotalConnections is less than or equal to zero
@@ -95,52 +142,6 @@ public class UserEventSinkConnector {
 
         return this;
     }
-
-    /**
-     * Sets the maximum number of retry attempts for failed requests.
-     * 
-     * @param retryMaxAttempts the maximum number of retry attempts
-     * @return this instance for method chaining
-     * @throws IllegalArgumentException if retryMaxAttempts is less than one
-     */
-    public UserEventSinkConnector retryMaxAttempts(int retryMaxAttempts) throws IllegalArgumentException {
-        if (retryMaxAttempts < 1) {
-            throw new IllegalArgumentException("retryMaxAttempts should be equal to or greater than one(1)");
-        }
-        this.retryMaxAttempts = retryMaxAttempts;
-        return this;
-    }
-
-    /**
-     * Sets the multiplier for exponential backoff in retry attempts.
-     * 
-     * @param retryExponentialBackoffMultiplier the multiplier for exponential backoff
-     * @return this instance for method chaining
-     * @throws IllegalArgumentException if retryExponentialBackoffMultiplier is less than one
-     */
-    public UserEventSinkConnector retryExponentialBackoffMultiplier(int retryExponentialBackoffMultiplier) throws IllegalArgumentException {
-        if (retryExponentialBackoffMultiplier < 1) {
-            throw new IllegalArgumentException("retryExponentialBackoffMultiplier should be equal to or greater than one(1)");
-        }
-        this.retryExponentialBackoffMultiplier = retryExponentialBackoffMultiplier;
-        return this;
-    }
-
-    /**
-     * Sets the delay in seconds for the first retry attempt.
-     * 
-     * @param retryDelayMilliseconds the delay in milliseconds for the first retry attempt
-     * @return this instance for method chaining
-     * @throws IllegalArgumentException if retryDelayInternalSeconds is less than one
-     */
-    public UserEventSinkConnector retryDelayMilliseconds(int retryDelayMilliseconds) throws IllegalArgumentException {
-        if (retryDelayMilliseconds < 1) {
-            throw new IllegalArgumentException("retryDelayMilliseconds should be equal to or greater than one(1)");
-        }
-        this.retryDelayMilliseconds = retryDelayMilliseconds;
-        return this;
-    }
-
 
     /**
      * Validates a parameter is not null or empty and removes CR (\r) and LF (\n) characters.
@@ -170,12 +171,12 @@ public class UserEventSinkConnector {
      *          <i>interrupted status</i> of the current thread is
      *          cleared when this exception is thrown.
      */
-    public void send(String jsonString) 
-    throws IllegalArgumentException, ParseException, IOException, InterruptedException {
+    public void send(String jsonString)
+            throws IllegalArgumentException, ParseException, IOException, InterruptedException {
         if (jsonString == null || jsonString.trim().isEmpty()) {
             throw new IllegalArgumentException("The jsonString cannot be null or empty");
         }
-        ObjectMapper objectMapper = new ObjectMapper();
+
         JsonNode jsonNode = objectMapper.readTree(jsonString);
         this.send(jsonNode);
     }
@@ -192,8 +193,8 @@ public class UserEventSinkConnector {
      *          <i>interrupted status</i> of the current thread is
      *          cleared when this exception is thrown.
      */
-    public void send(JsonNode jsonNode) 
-    throws IllegalArgumentException, ParseException, IOException, InterruptedException {
+    public void send(JsonNode jsonNode)
+            throws IllegalArgumentException, ParseException, IOException, InterruptedException {
         utils.validateData(jsonNode);
 
         String url = String.format("%s/rmp/event/v1/platforms/%s/userevents", eventApiHostname, platformID);
@@ -203,9 +204,7 @@ public class UserEventSinkConnector {
         postRequest.setHeader("x-api-key", eventApiKey);
         postRequest.setEntity(new StringEntity(utils.filterNulls(jsonNode).toString(), ContentType.APPLICATION_JSON));
 
-        if (httpClient == null) {
-            maxTotalConnections(maxTotalConnections);
-        }
+        ensureHttpClient();
 
         int retryCount = 0;
         int waitTimeMilliseconds = this.retryDelayMilliseconds;
@@ -238,8 +237,8 @@ public class UserEventSinkConnector {
      * @throws UnsupportedCharsetException Thrown when the named charset is not available in
      * this instance of the Java virtual machine
      */
-    private String handleResponse(ClassicHttpResponse response) 
-    throws ParseException, IllegalArgumentException, IOException, UnsupportedCharsetException {
+    private String handleResponse(ClassicHttpResponse response)
+            throws ParseException, IllegalArgumentException, IOException, UnsupportedCharsetException {
         Objects.requireNonNull(response, "HTTP response cannot be null");
 
         int statusCode = response.getCode();
@@ -263,6 +262,70 @@ public class UserEventSinkConnector {
         if (httpClient != null) {
             httpClient.close(CloseMode.GRACEFUL);
             httpClient = null;
+        }
+    }
+
+    /**
+     * Builder class for UserEventSinkConnector.
+     */
+    public static class Builder {
+        private String eventApiHostname;
+        private String eventApiKey;
+        private String platformID;
+        private int maxTotalConnections = DEFAULT_MAX_TOTAL_CONNECTIONS;
+        private int retryMaxAttempts = DEFAULT_RETRY_MAX_ATTEMPTS;
+        private int retryExponentialBackoffMultiplier = DEFAULT_RETRY_EXPONENTIAL_BACKOFF_MULTIPLIER;
+        private int retryDelayMilliseconds = DEFAULT_RETRY_DELAY_MILLISECONDS;
+
+        public Builder eventApiHostname(String eventApiHostname) {
+            this.eventApiHostname = eventApiHostname;
+            return this;
+        }
+
+        public Builder eventApiKey(String eventApiKey) {
+            this.eventApiKey = eventApiKey;
+            return this;
+        }
+
+        public Builder platformID(String platformID) {
+            this.platformID = platformID;
+            return this;
+        }
+
+        public Builder maxTotalConnections(int maxTotalConnections) {
+            if (maxTotalConnections <= 0) {
+                throw new IllegalArgumentException("maxTotalConnections should be greater than zero (0)");
+            }
+            this.maxTotalConnections = maxTotalConnections;
+            return this;
+        }
+
+        public Builder retryMaxAttempts(int retryMaxAttempts) {
+            if (retryMaxAttempts < 1) {
+                throw new IllegalArgumentException("retryMaxAttempts should be equal to or greater than one(1)");
+            }
+            this.retryMaxAttempts = retryMaxAttempts;
+            return this;
+        }
+
+        public Builder retryExponentialBackoffMultiplier(int multiplier) {
+            if (multiplier < 1) {
+                throw new IllegalArgumentException("retryExponentialBackoffMultiplier should be equal to or greater than one(1)");
+            }
+            this.retryExponentialBackoffMultiplier = multiplier;
+            return this;
+        }
+
+        public Builder retryDelayMilliseconds(int delayMilliseconds) {
+            if (delayMilliseconds < 1) {
+                throw new IllegalArgumentException("retryDelayMilliseconds should be equal to or greater than one(1)");
+            }
+            this.retryDelayMilliseconds = delayMilliseconds;
+            return this;
+        }
+
+        public UserEventSinkConnector build() {
+            return new UserEventSinkConnector(this);
         }
     }
 }
