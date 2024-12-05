@@ -41,11 +41,13 @@ class UserEventSinkConnectorTest {
     @BeforeEach
     void setUp() {
         try {
-            connector = new UserEventSinkConnector(TEST_PLATFORM, TEST_URL, TEST_API_KEY)
-                .maxTotalConnections(1)
-                .retryMaxAttempts(1)
-                .retryExponentialBackoffMultiplier(1)
-                .retryDelayMilliseconds(100);
+            connector = new UserEventSinkConnector.Builder()
+                    .platformID(TEST_PLATFORM)
+                    .eventApiHostname(TEST_URL)
+                    .eventApiKey(TEST_API_KEY)
+                    .retryMaxAttempts(1)
+                    .retryExponentialBackoffMultiplier(1)
+                    .retryDelayMilliseconds(100).build();
         } catch (IllegalArgumentException e) {
             
         }
@@ -163,7 +165,7 @@ class UserEventSinkConnectorTest {
         @Test
         @DisplayName("Should pass when retryMaxAttempts is 1")
         void testRetryMaxAttempts1() {
-            connector.retryMaxAttempts(1);
+            connector.toBuilder().retryMaxAttempts(1).build();
         }
 
         @Test
@@ -171,11 +173,11 @@ class UserEventSinkConnectorTest {
         void testRetryMaxAttempts2() {
             Exception exception = assertThrows(
                 IllegalArgumentException.class,
-                () -> connector.retryMaxAttempts(0)
+                () -> connector.toBuilder().retryMaxAttempts(0)
             );
 
             assertEquals(
-                "retryMaxAttempts should be equal to or greater than one(1)",
+                "retryMaxAttempts should be between 1 and 10",
                 exception.getMessage()
             );
         }
@@ -183,7 +185,7 @@ class UserEventSinkConnectorTest {
         @Test
         @DisplayName("Should pass when retryExponentialBackoffMultiplier is 1")
         void testRetryExponentialBackoffMultiplier1() {
-            connector.retryExponentialBackoffMultiplier(1);
+            connector.toBuilder().retryExponentialBackoffMultiplier(1);
         }
 
         @Test
@@ -191,7 +193,7 @@ class UserEventSinkConnectorTest {
         void testRetryExponentialBackoffMultiplier2() {
             Exception exception = assertThrows(
                 IllegalArgumentException.class,
-                () -> connector.retryExponentialBackoffMultiplier(0)
+                () -> connector.toBuilder().retryExponentialBackoffMultiplier(0)
             );
 
             assertEquals(
@@ -203,7 +205,7 @@ class UserEventSinkConnectorTest {
         @Test
         @DisplayName("Should pass when retryDelayMilliseconds is 1")
         void retryDelayMilliseconds1() {
-            connector.retryDelayMilliseconds(1);
+            connector.toBuilder().retryDelayMilliseconds(1);
         }
 
         @Test
@@ -211,7 +213,7 @@ class UserEventSinkConnectorTest {
         void retryDelayMilliseconds2() {
             Exception exception = assertThrows(
                 IllegalArgumentException.class,
-                () -> connector.retryDelayMilliseconds(0)
+                () -> connector.toBuilder().retryDelayMilliseconds(0)
             );
 
             assertEquals(

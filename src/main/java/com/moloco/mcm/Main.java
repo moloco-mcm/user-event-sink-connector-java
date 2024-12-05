@@ -49,11 +49,14 @@ public class Main {
 
         try {
 
-            connector = new UserEventSinkConnector(platformId, apiHostname, apiKey)
-                .maxTotalConnections(maxTotalConnections)
-                .retryMaxAttempts(retryMaxAttempts)
-                .retryExponentialBackoffMultiplier(retryExponentialBackoffMultiplier)
-                .retryDelayMilliseconds(retryDelayMilliseconds);
+            connector = new UserEventSinkConnector.Builder()
+                    .platformID(platformId)
+                    .eventApiHostname(apiHostname)
+                    .eventApiKey(apiKey)
+                    .maxTotalConnections(maxTotalConnections)
+                    .retryMaxAttempts(retryMaxAttempts)
+                    .retryExponentialBackoffMultiplier(retryExponentialBackoffMultiplier)
+                    .retryDelayMilliseconds(retryDelayMilliseconds).build();
 
             // Sample events are created and sent to the connector here:
             String[] jsonStrings = new String[]{
