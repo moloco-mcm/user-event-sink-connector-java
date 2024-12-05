@@ -177,7 +177,7 @@ class UserEventSinkConnectorTest {
             );
 
             assertEquals(
-                "retryMaxAttempts should be equal to or greater than one(1)",
+                "retryMaxAttempts should be between 1 and 10",
                 exception.getMessage()
             );
         }

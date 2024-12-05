@@ -301,8 +301,8 @@ public class UserEventSinkConnector {
         }
 
         public Builder retryMaxAttempts(int retryMaxAttempts) {
-            if (retryMaxAttempts < 1) {
-                throw new IllegalArgumentException("retryMaxAttempts should be equal to or greater than one(1)");
+            if (retryMaxAttempts < 1 || retryMaxAttempts > 10) {
+                throw new IllegalArgumentException("retryMaxAttempts should be between 1 and 10");
             }
             this.retryMaxAttempts = retryMaxAttempts;
             return this;
